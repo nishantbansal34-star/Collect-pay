@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2d2f7a">
+<title>Collect Pay</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one-column counter tool — account strip, amount entry, live QR card; full-screen "show customer" mode */
+:root{
+  --bg:#f3f4f8; --surface:#ffffff; --ink:#1b1d3a; --muted:#62668a; --line:#dfe1ec;
+  --accent:#f2a20c; --accent-ink:#2a1a00; --indigo:#2d2f7a; --warn:#b4401c; --warn-bg:#fdeee7; --ok:#1f7a4d;
+  --f-display:"Familjen Grotesk", system-ui, sans-serif;
+  --f-body:"Familjen Grotesk", system-ui, sans-serif;
+  --f-num:"JetBrains Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12132a; --surface:#1c1e3b; --ink:#eceefb; --muted:#a3a7c9; --line:#2f3260;
+  --accent:#f5b336; --accent-ink:#2a1a00; --indigo:#9fa3ff; --warn:#ffab8a; --warn-bg:#3a2020; --ok:#6fd3a0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12132a; --surface:#1c1e3b; --ink:#eceefb; --muted:#a3a7c9; --line:#2f3260;
+  --accent:#f5b336; --accent-ink:#2a1a00; --indigo:#9fa3ff; --warn:#ffab8a; --warn-bg:#3a2020; --ok:#6fd3a0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
+.wrap{max-width:520px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px;display:flex;flex-direction:column;gap:18px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+h1{font-family:var(--f-display);font-size:24px;font-weight:700;margin:0;letter-spacing:-.01em}
+h1 span{color:var(--accent)}
+.lbl{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.linkbtn{color:var(--indigo);font-weight:600;font-size:14px;padding:6px 2px}
+
+/* account strip */
+.accts{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.acct{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:9px 14px 9px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);min-width:118px;text-align:left}
+.acct b{font-weight:600;font-size:14px;display:flex;align-items:center;gap:7px}
+.acct small{color:var(--muted);font-size:12px;font-family:var(--f-num);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.acct[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.acct.add{justify-content:center;align-items:center;color:var(--indigo);font-weight:600;border-style:dashed;min-width:90px}
+
+/* amount */
+.amount{display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:10px 16px}
+.amount:focus-within{border-color:var(--accent)}
+.amount .rs{font-family:var(--f-num);font-size:34px;color:var(--muted);font-weight:500}
+#amt{flex:1;min-width:0;border:0;background:none;color:var(--ink);font-family:var(--f-num);font-size:40px;font-weight:700;padding:4px 0;outline:none;font-variant-numeric:tabular-nums}
+#amt::placeholder{color:var(--line)}
+.quick{display:flex;flex-wrap:wrap;gap:8px}
+.quick button{font-family:var(--f-num);font-size:13px;padding:7px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field input,.field select{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;width:100%}
+
+/* QR card */
+.card{background:var(--surface);border-radius:20px;border:1px solid var(--line);padding:20px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.qrbox{background:#fff;padding:14px;border-radius:14px;line-height:0;border:1px solid #e6e6ee}
+.qrbox img,.qrbox canvas{width:min(240px,60vw)!important;height:auto!important}
+.payto{display:flex;flex-direction:column;gap:2px}
+.payto .who{font-weight:700;font-size:17px}
+.payto .vpa{font-family:var(--f-num);font-size:13px;color:var(--muted);word-break:break-all}
+.big{font-family:var(--f-num);font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+.note{color:var(--muted);font-size:14px}
+.empty{color:var(--muted);padding:40px 10px;font-size:15px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.btn{padding:13px 10px;border-radius:12px;font-weight:600;font-size:15px;border:1.5px solid var(--line);background:var(--surface)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.warn{background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:10px 13px;font-size:13.5px;text-align:left;width:100%}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+.hint{font-size:13px;color:var(--muted)}
+
+/* show-customer mode */
+.present{position:fixed;inset:0;background:var(--indigo);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:calc(20px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));color:#fff;text-align:center;z-index:10}
+:root[data-theme="dark"] .present{background:#20226b}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .present{background:#20226b}}
+.present .scan{font-size:13px;letter-spacing:.12em;text-transform:uppercase;opacity:.8}
+.present .big{color:#fff;font-size:46px}
+.present .qrbox img,.present .qrbox canvas{width:min(300px,72vw)!important}
+.present .who{font-size:18px;font-weight:600}
+.present .vpa{font-family:var(--f-num);opacity:.75;font-size:13px}
+.present .close{margin-top:6px;color:#fff;border:1.5px solid rgba(255,255,255,.5);padding:11px 26px;border-radius:999px;font-weight:600}
+.present .apps{font-size:12.5px;opacity:.75}
+
+/* sheet (add / edit account) */
+.sheet-bg{position:fixed;inset:0;background:rgba(10,10,30,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{background:var(--bg);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:20px max(18px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px;max-height:92vh;overflow:auto}
+.sheet h2{margin:0;font-size:19px}
+.swatches{display:flex;gap:10px}
+.swatches button{width:30px;height:30px;border-radius:50%;border:2px solid transparent}
+.swatches button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 3px var(--bg)}
+.row{display:flex;gap:10px}
+.row .btn{flex:1}
+.btn.danger{color:var(--warn)}
+.err{color:var(--warn);font-size:13px;min-height:1em}
+@media (prefers-reduced-motion: reduce){.toast{transition:none}}
+</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Collect<span>.</span>Pay</h1>
+    <button class="linkbtn" id="editBtn" type="button">Edit QR</button>
+  </header>
+
+  <section class="field" aria-label="Choose QR">
+    <span class="lbl">Collect into</span>
+    <div class="accts" id="accts" role="group"></div>
+  </section>
+
+  <section class="field">
+    <label class="lbl" for="amt">Amount to request</label>
+    <div class="amount"><span class="rs">₹</span><input id="amt" inputmode="decimal" autocomplete="off" placeholder="0" value="1250"></div>
+    <div class="quick" id="quick"></div>
+  </section>
+
+  <section class="field">
+    <label class="lbl" for="note">Note for payer (optional)</label>
+    <input id="note" maxlength="50" placeholder="e.g. Order #214, balloons" value="Birthday decor order">
+  </section>
+
+  <section class="card" id="card" aria-live="polite"></section>
+  <p class="hint">Customer scans with GPay, PhonePe, Paytm or any UPI app. The amount is already filled in for them.</p>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const COLORS=["#f2a20c","#2d2f7a","#1f7a4d","#c2185b","#0277bd","#6d4c41"];
+const KEY="collectpay.v1";
+let state={accounts:[
+  {id:"a1",label:"Shop counter",vpa:"example@upi",name:"Your Shop Name",color:COLORS[0],example:true},
+  {id:"a2",label:"Wholesale",vpa:"example2@upi",name:"Your Business Name",color:COLORS[1],example:true}
+],active:"a1"};
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&Array.isArray(s.accounts))state=s;}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const active=()=>state.accounts.find(a=>a.id===state.active)||state.accounts[0];
+
+function parseAmt(v){
+  v=String(v).replace(/[,\s₹]/g,"");
+  if(!/^\d+(\.\d{0,2})?$/.test(v))return null;
+  const n=parseFloat(v);return n>0&&n<=100000?n:null;
+}
+const fmt=n=>"₹"+n.toLocaleString("en-IN",{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2});
+
+function upiLink(a,n,note){
+  const p=new URLSearchParams();
+  p.set("pa",a.vpa.trim());p.set("pn",a.name.trim()||a.label);
+  p.set("am",n.toFixed(2));p.set("cu","INR");
+  if(note)p.set("tn",note);
+  return "upi://pay?"+p.toString().replace(/\+/g,"%20");
+}
+
+function renderAccts(){
+  $("accts").innerHTML=state.accounts.map(a=>`<button type="button" class="acct" data-id="${a.id}" aria-pressed="${a.id===state.active}"><b><span class="dot" style="background:${esc(a.color)}"></span>${esc(a.label)}</b><small>${esc(a.vpa)}</small></button>`).join("")+`<button type="button" class="acct add" id="addAcct">+ Add QR</button>`;
+}
+function renderQuick(){
+  $("quick").innerHTML=[100,500,1000,2000,5000].map(v=>`<button type="button" data-v="${v}">${fmt(v)}</button>`).join("");
+}
+
+let lastLink=null;
+function renderCard(){
+  const a=active(),card=$("card");
+  if(!a){card.innerHTML=`<div class="empty">Add a QR to start collecting.</div>`;lastLink=null;return}
+  const n=parseAmt($("amt").value),note=$("note").value.trim();
+  const warn=a.example||/^example/i.test(a.vpa)?`<div class="warn">This is a sample UPI ID. Tap <b>Edit QR</b> and enter your real UPI ID before asking anyone to pay.</div>`:"";
+  if(!n){
+    card.innerHTML=`${warn}<div class="empty">Enter an amount above ₹0 (up to ₹1,00,000) to make the QR.</div>`;lastLink=null;return;
+  }
+  lastLink=upiLink(a,n,note);
+  card.innerHTML=`${warn}<div class="payto"><span class="lbl">Pay to · ${esc(a.label)}</span><span class="who">${esc(a.name)}</span><span class="vpa">${esc(a.vpa)}</span></div>
+  <div class="qrbox" id="qr"></div>
+  <div class="big">${fmt(n)}</div>${note?`<div class="note">${esc(note)}</div>`:""}
+  <div class="actions"><button class="btn primary" type="button" id="showBtn">Show to customer</button><button class="btn" type="button" id="copyBtn">Copy pay link</button></div>`;
+  drawQR($("qr"),lastLink,240);
+}
+function drawQR(el,text,size){
+  el.innerHTML="";
+  if(typeof QRCode==="undefined"){el.textContent="QR library didn't load. Check your connection.";return}
+  new QRCode(el,{text,width:size*2,height:size*2,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
+}
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),1800)}
+
+function present(){
+  const a=active(),n=parseAmt($("amt").value),note=$("note").value.trim();if(!lastLink)return;
+  const d=document.createElement("div");d.className="present";d.setAttribute("role","dialog");d.setAttribute("aria-label","Payment QR");
+  d.innerHTML=`<div class="scan">Scan to pay</div><div class="big">${fmt(n)}</div><div class="qrbox" id="qr2"></div><div><div class="who">${esc(a.name)}</div><div class="vpa">${esc(a.vpa)}</div></div>${note?`<div class="apps">${esc(note)}</div>`:""}<div class="apps">GPay · PhonePe · Paytm · BHIM · any UPI app</div><button class="close" type="button">Done</button>`;
+  document.body.appendChild(d);drawQR(d.querySelector("#qr2"),lastLink,300);
+  try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(l=>d._lock=l).catch(()=>{})}catch(e){}
+  const close=()=>{try{d._lock&&d._lock.release()}catch(e){}d.remove()};
+  d.querySelector(".close").onclick=close;d.querySelector(".close").focus();
+  d.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
+}
+
+function sheet(acct){
+  const isNew=!acct;acct=acct||{id:"a"+Date.now(),label:"",vpa:"",name:"",color:COLORS[state.accounts.length%COLORS.length]};
+  let color=acct.color;
+  const bg=document.createElement("div");bg.className="sheet-bg";
+  bg.innerHTML=`<form class="sheet" novalidate><h2>${isNew?"Add a QR":"Edit QR"}</h2>
+  <div class="field"><label class="lbl" for="f_label">Name this QR</label><input id="f_label" placeholder="e.g. Shop counter, Wholesale, Personal" value="${esc(acct.label)}"></div>
+  <div class="field"><label class="lbl" for="f_vpa">UPI ID</label><input id="f_vpa" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="yourname@okhdfcbank" value="${acct.example?"":esc(acct.vpa)}"></div>
+  <div class="field"><label class="lbl" for="f_name">Name customers see</label><input id="f_name" placeholder="Business or account holder name" value="${acct.example?"":esc(acct.name)}"></div>
+  <div class="field"><span class="lbl">Colour</span><div class="swatches">${COLORS.map(c=>`<button type="button" data-c="${c}" aria-label="Colour ${c}" aria-pressed="${c===color}" style="background:${c}"></button>`).join("")}</div></div>
+  <p class="hint">Find your UPI ID in your bank or UPI app under Profile. It looks like name@bank.</p>
+  <div class="err" id="f_err"></div>
+  <div class="row">${isNew?"":`<button type="button" class="btn danger" id="f_del">Delete</button>`}<button type="button" class="btn" id="f_cancel">Cancel</button><button type="submit" class="btn primary">Save</button></div></form>`;
+  document.body.appendChild(bg);
+  const f=bg.querySelector("form");let confirmDel=false;
+  bg.querySelectorAll(".swatches button").forEach(b=>b.onclick=()=>{color=b.dataset.c;bg.querySelectorAll(".swatches button").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+  bg.querySelector("#f_cancel").onclick=()=>bg.remove();
+  bg.addEventListener("click",e=>{if(e.target===bg)bg.remove()});
+  const del=bg.querySelector("#f_del");
+  if(del)del.onclick=()=>{
+    if(!confirmDel){confirmDel=true;del.textContent="Tap again to delete";return}
+    state.accounts=state.accounts.filter(a=>a.id!==acct.id);
+    if(state.active===acct.id)state.active=state.accounts[0]?.id;save();bg.remove();renderAll();toast("QR deleted");
+  };
+  f.onsubmit=e=>{
+    e.preventDefault();
+    const label=f.f_label.value.trim(),vpa=f.f_vpa.value.trim().toLowerCase(),name=f.f_name.value.trim();
+    if(!label)return $("f_err").textContent="Give this QR a name, like Shop counter.";
+    if(!/^[a-z0-9.\-_]{2,256}@[a-z][a-z0-9.\-]{1,64}$/.test(vpa))return $("f_err").textContent="That UPI ID doesn't look right. It should look like name@bank.";
+    if(!name)return $("f_err").textContent="Add the name customers will see when paying.";
+    const rec={id:acct.id,label,vpa,name,color};
+    const i=state.accounts.findIndex(a=>a.id===acct.id);
+    if(i>=0)state.accounts[i]=rec;else state.accounts.push(rec);
+    state.active=rec.id;save();bg.remove();renderAll();toast("QR saved");
+  };
+  f.f_label.focus();
+}
+
+function renderAll(){renderAccts();renderCard()}
+
+$("accts").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.id==="addAcct")return sheet();
+  state.active=b.dataset.id;save();renderAll();
+});
+$("editBtn").onclick=()=>{const a=active();a?sheet(a):sheet()};
+$("quick").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;$("amt").value=b.dataset.v;renderCard()});
+$("amt").addEventListener("input",()=>{clearTimeout(renderCard.t);renderCard.t=setTimeout(renderCard,250)});
+$("note").addEventListener("input",()=>{clearTimeout(renderCard.t);renderCard.t=setTimeout(renderCard,350)});
+$("card").addEventListener("click",e=>{
+  if(e.target.id==="showBtn")present();
+  if(e.target.id==="copyBtn"&&lastLink){
+    const done=()=>toast("Pay link copied");
+    try{navigator.clipboard.writeText(lastLink).then(done).catch(()=>fallbackCopy())}catch(err){fallbackCopy()}
+  }
+});
+function fallbackCopy(){
+  const t=document.createElement("textarea");t.value=lastLink;document.body.appendChild(t);t.select();
+  try{document.execCommand("copy");toast("Pay link copied")}catch(e){toast("Couldn't copy. Long-press to copy instead.")}t.remove();
+}
+renderQuick();renderAll();
+</script>
+</body>
+</html>
