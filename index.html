@@ -180,7 +180,7 @@ function renderCard(){
   card.innerHTML=`${warn}<div class="payto"><span class="lbl">Pay to · ${esc(a.label)}</span><span class="who">${esc(a.name)}</span><span class="vpa">${esc(a.vpa)}</span></div>
   <div class="qrbox" id="qr"></div>
   <div class="big">${fmt(n)}</div>${note?`<div class="note">${esc(note)}</div>`:""}
-  <div class="actions"><button class="btn primary" type="button" id="showBtn">Show to customer</button><button class="btn" type="button" id="copyBtn">Copy pay link</button></div>`;
+  <div class="actions"><button class="btn primary" type="button" id="showBtn">Show to customer</button><button class="btn" type="button" id="copyBtn">${window.Android?"Share pay link":"Copy pay link"}</button></div>`;
   drawQR($("qr"),lastLink,240);
 }
 function drawQR(el,text,size){
@@ -196,7 +196,8 @@ function present(){
   d.innerHTML=`<div class="scan">Scan to pay</div><div class="big">${fmt(n)}</div><div class="qrbox" id="qr2"></div><div><div class="who">${esc(a.name)}</div><div class="vpa">${esc(a.vpa)}</div></div>${note?`<div class="apps">${esc(note)}</div>`:""}<div class="apps">GPay · PhonePe · Paytm · BHIM · any UPI app</div><button class="close" type="button">Done</button>`;
   document.body.appendChild(d);drawQR(d.querySelector("#qr2"),lastLink,300);
   try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(l=>d._lock=l).catch(()=>{})}catch(e){}
-  const close=()=>{try{d._lock&&d._lock.release()}catch(e){}d.remove()};
+  try{window.Android&&Android.keepAwake(true)}catch(e){}
+  const close=()=>{try{d._lock&&d._lock.release()}catch(e){}try{window.Android&&Android.keepAwake(false)}catch(e){}d.remove()};
   d.querySelector(".close").onclick=close;d.querySelector(".close").focus();
   d.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
 }
@@ -251,6 +252,11 @@ $("amt").addEventListener("input",()=>{clearTimeout(renderCard.t);renderCard.t=s
 $("note").addEventListener("input",()=>{clearTimeout(renderCard.t);renderCard.t=setTimeout(renderCard,350)});
 $("card").addEventListener("click",e=>{
   if(e.target.id==="showBtn")present();
+  if(e.target.id==="copyBtn"&&lastLink&&window.Android){
+    const a=active(),n=parseAmt($("amt").value);
+    try{Android.share(`Please pay ${fmt(n)} to ${a.name} (${a.vpa}) via UPI:\n${lastLink}`)}catch(err){}
+    return;
+  }
   if(e.target.id==="copyBtn"&&lastLink){
     const done=()=>toast("Pay link copied");
     try{navigator.clipboard.writeText(lastLink).then(done).catch(()=>fallbackCopy())}catch(err){fallbackCopy()}

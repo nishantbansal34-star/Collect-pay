@@ -1,0 +1,32 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'in.nrrl.collectpay'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'in.nrrl.collectpay'
+        minSdk 24
+        targetSdk 34
+        versionCode((System.getenv('GITHUB_RUN_NUMBER') ?: '1').toInteger())
+        versionName "1.0." + (System.getenv('GITHUB_RUN_NUMBER') ?: '0')
+    }
+    signingConfigs {
+        // Fixed key committed in the repo so every build can update the previous install.
+        shared {
+            storeFile file('collectpay.keystore')
+            storePassword 'collectpay'
+            keyAlias 'collectpay'
+            keyPassword 'collectpay'
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.shared
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

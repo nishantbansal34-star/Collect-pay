@@ -19,3 +19,9 @@ Replace the two sample UPI IDs with your own using **Edit QR** before collecting
 ## Privacy
 
 Saved UPI IDs are kept only in your browser's local storage on that device. Nothing is sent to a server. The app doesn't process or confirm payments, so always check incoming payments in your own bank or UPI app.
+
+## Android app (APK)
+
+Every push to `main` builds `CollectPay.apk` with GitHub Actions and attaches it to the latest release on the [Releases page](../../releases/latest). On your phone, download the APK, open it, and allow "Install unknown apps" for your browser when asked.
+
+The APK works offline (the QR library is bundled), keeps the screen on while the customer QR is showing, and has a **Share pay link** button that opens Android's share sheet.
