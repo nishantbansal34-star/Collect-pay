@@ -6,6 +6,10 @@ import android.content.ClipboardManager;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Base64;
+import androidx.core.content.FileProvider;
+import java.io.File;
+import java.io.FileOutputStream;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
@@ -65,7 +69,31 @@ public class MainActivity extends Activity {
             runOnUiThread(() -> {
                 ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
                 cm.setPrimaryClip(ClipData.newPlainText("UPI link", text));
-                Toast.makeText(MainActivity.this, "Pay link copied", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Copied", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void shareImage(final String base64Png, final String text) {
+            runOnUiThread(() -> {
+                try {
+                    File dir = new File(getCacheDir(), "shared");
+                    dir.mkdirs();
+                    File f = new File(dir, "payment-qr.png");
+                    try (FileOutputStream out = new FileOutputStream(f)) {
+                        out.write(Base64.decode(base64Png, Base64.DEFAULT));
+                    }
+                    Uri uri = FileProvider.getUriForFile(MainActivity.this, "in.nrrl.collectpay.files", f);
+                    Intent i = new Intent(Intent.ACTION_SEND);
+                    i.setType("image/png");
+                    i.putExtra(Intent.EXTRA_STREAM, uri);
+                    i.putExtra(Intent.EXTRA_TEXT, text);
+                    i.setClipData(ClipData.newRawUri("payment-qr", uri));
+                    i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    startActivity(Intent.createChooser(i, "Share payment QR"));
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "Couldn't share the QR image", Toast.LENGTH_SHORT).show();
+                }
             });
         }
 

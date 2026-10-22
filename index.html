@@ -3,270 +3,445 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#2d2f7a">
+<meta name="theme-color" content="#2D2F7A">
 <title>Collect Pay</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
 <style>
-/* Layout: one-column counter tool — account strip, amount entry, live QR card; full-screen "show customer" mode */
+/* Layout: one-column counter app — QR picker strip, amount entry, then a "pay pass" (ticket) that is exactly the image customers receive */
 :root{
-  --bg:#f3f4f8; --surface:#ffffff; --ink:#1b1d3a; --muted:#62668a; --line:#dfe1ec;
-  --accent:#f2a20c; --accent-ink:#2a1a00; --indigo:#2d2f7a; --warn:#b4401c; --warn-bg:#fdeee7; --ok:#1f7a4d;
-  --f-display:"Familjen Grotesk", system-ui, sans-serif;
-  --f-body:"Familjen Grotesk", system-ui, sans-serif;
-  --f-num:"JetBrains Mono", ui-monospace, monospace;
+  --bg:#F4F3F8; --surface:#FFFFFF; --ink:#17182E; --muted:#676985; --line:#E3E2EE; --soft:#ECEBF4;
+  --accent:#E8930C; --warn:#A63A12; --warn-bg:#FCEDE4; --scrim:rgba(14,14,32,.5);
+  --f-display:"Bricolage Grotesque", "Hanken Grotesk", system-ui, sans-serif;
+  --f-body:"Hanken Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --c:#2D2F7A; --c2:#1d1e55; --on:#FFFFFF;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#12132a; --surface:#1c1e3b; --ink:#eceefb; --muted:#a3a7c9; --line:#2f3260;
-  --accent:#f5b336; --accent-ink:#2a1a00; --indigo:#9fa3ff; --warn:#ffab8a; --warn-bg:#3a2020; --ok:#6fd3a0; color-scheme:dark}}
+  --bg:#0F1020; --surface:#191A30; --ink:#EEEEF8; --muted:#A2A3C2; --line:#2B2C48; --soft:#22233D;
+  --accent:#F2A93B; --warn:#FFB08F; --warn-bg:#3A2117; --scrim:rgba(0,0,0,.6); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#12132a; --surface:#1c1e3b; --ink:#eceefb; --muted:#a3a7c9; --line:#2f3260;
-  --accent:#f5b336; --accent-ink:#2a1a00; --indigo:#9fa3ff; --warn:#ffab8a; --warn-bg:#3a2020; --ok:#6fd3a0; color-scheme:dark}
-*{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
-.wrap{max-width:520px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px;display:flex;flex-direction:column;gap:18px}
-header{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
-h1{font-family:var(--f-display);font-size:24px;font-weight:700;margin:0;letter-spacing:-.01em}
-h1 span{color:var(--accent)}
-.lbl{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
-button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.linkbtn{color:var(--indigo);font-weight:600;font-size:14px;padding:6px 2px}
+  --bg:#0F1020; --surface:#191A30; --ink:#EEEEF8; --muted:#A2A3C2; --line:#2B2C48; --soft:#22233D;
+  --accent:#F2A93B; --warn:#FFB08F; --warn-bg:#3A2117; --scrim:rgba(0,0,0,.6); color-scheme:dark}
 
-/* account strip */
-.accts{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
-.acct{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:9px 14px 9px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);min-width:118px;text-align:left}
-.acct b{font-weight:600;font-size:14px;display:flex;align-items:center;gap:7px}
-.acct small{color:var(--muted);font-size:12px;font-family:var(--f-num);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dot{width:9px;height:9px;border-radius:50%;flex:none}
-.acct[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
-.acct.add{justify-content:center;align-items:center;color:var(--indigo);font-weight:600;border-style:dashed;min-width:90px}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit;padding:0}
+button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.wrap{max-width:480px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 36px;display:flex;flex-direction:column;gap:22px}
+
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:34px;height:34px;border-radius:10px;background:var(--ink);display:grid;place-items:center}
+.brand h1{font-family:var(--f-display);font-size:21px;font-weight:750;letter-spacing:-.02em;margin:0}
+.ghost{font-weight:600;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--line);padding:8px 14px;border-radius:999px}
+
+.lbl{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.sec{display:flex;flex-direction:column;gap:10px}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between}
+
+/* QR picker */
+.accts{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;margin-inline:-4px;padding:4px}
+.accts::-webkit-scrollbar{display:none}
+.acct{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:8px 14px 8px 8px;border-radius:16px;background:var(--surface);border:1.5px solid var(--line);text-align:left;max-width:220px;transition:border-color .15s, transform .15s}
+.acct:active{transform:scale(.97)}
+.av{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-family:var(--f-display);font-weight:750;font-size:16px;flex:none}
+.acct .t{display:flex;flex-direction:column;min-width:0}
+.acct b{font-weight:650;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acct small{color:var(--muted);font-size:11.5px;font-family:var(--f-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acct[aria-pressed="true"]{border-color:var(--ink)}
+.acct.add{border-style:dashed;color:var(--muted);font-weight:600;padding:8px 16px;gap:8px}
+.acct.add .plus{width:26px;height:26px;border-radius:8px;background:var(--soft);display:grid;place-items:center;font-size:18px;line-height:1;color:var(--ink)}
 
 /* amount */
-.amount{display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:10px 16px}
-.amount:focus-within{border-color:var(--accent)}
-.amount .rs{font-family:var(--f-num);font-size:34px;color:var(--muted);font-weight:500}
-#amt{flex:1;min-width:0;border:0;background:none;color:var(--ink);font-family:var(--f-num);font-size:40px;font-weight:700;padding:4px 0;outline:none;font-variant-numeric:tabular-nums}
+.amount{display:flex;align-items:baseline;gap:4px;border-bottom:2px solid var(--line);padding:2px 2px 6px;transition:border-color .15s}
+.amount:focus-within{border-color:var(--ink)}
+.amount .rs{font-family:var(--f-display);font-size:34px;font-weight:600;color:var(--muted)}
+#amt{flex:1;min-width:0;border:0;background:none;color:var(--ink);font-family:var(--f-display);font-size:48px;font-weight:750;letter-spacing:-.02em;padding:0;outline:none;font-variant-numeric:tabular-nums}
 #amt::placeholder{color:var(--line)}
-.quick{display:flex;flex-wrap:wrap;gap:8px}
-.quick button{font-family:var(--f-num);font-size:13px;padding:7px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
-.field{display:flex;flex-direction:column;gap:6px}
-.field input,.field select{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;width:100%}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-weight:600;font-size:13.5px;padding:7px 13px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip:active{background:var(--soft)}
+.chip.plus{color:var(--muted)}
+.note-in{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:0 14px}
+.note-in svg{flex:none;color:var(--muted)}
+#note{flex:1;min-width:0;font:inherit;color:var(--ink);background:none;border:0;padding:13px 0;outline:none}
+#note::placeholder{color:var(--muted);opacity:.7}
 
-/* QR card */
-.card{background:var(--surface);border-radius:20px;border:1px solid var(--line);padding:20px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
-.qrbox{background:#fff;padding:14px;border-radius:14px;line-height:0;border:1px solid #e6e6ee}
-.qrbox img,.qrbox canvas{width:min(240px,60vw)!important;height:auto!important}
-.payto{display:flex;flex-direction:column;gap:2px}
-.payto .who{font-weight:700;font-size:17px}
-.payto .vpa{font-family:var(--f-num);font-size:13px;color:var(--muted);word-break:break-all}
-.big{font-family:var(--f-num);font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
-.note{color:var(--muted);font-size:14px}
-.empty{color:var(--muted);padding:40px 10px;font-size:15px}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
-.btn{padding:13px 10px;border-radius:12px;font-weight:600;font-size:15px;border:1.5px solid var(--line);background:var(--surface)}
-.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.warn{background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:10px 13px;font-size:13.5px;text-align:left;width:100%}
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none}
-.toast.on{opacity:1}
-.hint{font-size:13px;color:var(--muted)}
+/* the pass */
+.warn{background:var(--warn-bg);color:var(--warn);border-radius:14px;padding:11px 14px;font-size:13.5px;line-height:1.4}
+.warn b{font-weight:700}
+.pass{border-radius:26px;overflow:hidden;position:relative;box-shadow:0 1px 0 rgba(0,0,0,.04),0 18px 40px -18px rgba(20,20,60,.35)}
+.pass-top{color:var(--on);padding:20px 22px 26px;background:
+  radial-gradient(120% 90% at 100% 0%, rgba(255,255,255,.22), transparent 55%),
+  radial-gradient(60% 80% at 0% 100%, rgba(0,0,0,.14), transparent 60%),
+  linear-gradient(150deg, var(--c), var(--c2));display:flex;flex-direction:column;gap:4px;position:relative}
+.pass-top .row{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.85}
+.pass-top .row span:last-child{max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pass-amt{font-family:var(--f-display);font-size:clamp(40px,12vw,56px);font-weight:800;letter-spacing:-.03em;line-height:1.05;margin-top:10px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.pass-amt.dim{opacity:.55;font-weight:700}
+.pass-to{font-size:16px;font-weight:500;opacity:.92;overflow-wrap:anywhere}
+.pass-to b{font-weight:700}
+.pass-note{align-self:flex-start;margin-top:10px;font-size:13px;font-weight:600;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.18);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pass-bottom{background:#FFFFFF;color:#17182E;padding:24px 22px 20px;position:relative;border-top:2px dashed #D6D6E4;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.pass-bottom::before,.pass-bottom::after{content:"";position:absolute;top:-14px;width:26px;height:26px;border-radius:50%;background:var(--bg)}
+.pass-bottom::before{left:-13px}.pass-bottom::after{right:-13px}
+.qr{width:min(232px,62vw);aspect-ratio:1;max-width:100%;display:grid;place-items:center;position:relative}
+.qr canvas{width:100%;height:100%;image-rendering:pixelated}
+.qr .ph{width:100%;height:100%;border-radius:12px;background:
+  repeating-linear-gradient(0deg,#EFEFF5 0 10px,transparent 10px 20px),
+  repeating-linear-gradient(90deg,#EFEFF5 0 10px,#F8F8FB 10px 20px);display:grid;place-items:center;color:#8A8BA3;font-size:13.5px;font-weight:600;padding:20px}
+.vpa{font-family:var(--f-mono);font-size:13px;font-weight:600;color:#17182E;overflow-wrap:anywhere}
+.apps{font-size:12px;color:#6A6B86;display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.apps i{font-style:normal;opacity:.5}
 
-/* show-customer mode */
-.present{position:fixed;inset:0;background:var(--indigo);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:calc(20px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));color:#fff;text-align:center;z-index:10}
-:root[data-theme="dark"] .present{background:#20226b}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .present{background:#20226b}}
-.present .scan{font-size:13px;letter-spacing:.12em;text-transform:uppercase;opacity:.8}
-.present .big{color:#fff;font-size:46px}
-.present .qrbox img,.present .qrbox canvas{width:min(300px,72vw)!important}
-.present .who{font-size:18px;font-weight:600}
-.present .vpa{font-family:var(--f-num);opacity:.75;font-size:13px}
-.present .close{margin-top:6px;color:#fff;border:1.5px solid rgba(255,255,255,.5);padding:11px 26px;border-radius:999px;font-weight:600}
-.present .apps{font-size:12.5px;opacity:.75}
+/* actions */
+.actions{display:flex;flex-direction:column;gap:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:9px;padding:14px 12px;border-radius:16px;font-weight:650;font-size:15px;background:var(--surface);border:1px solid var(--line);color:var(--ink);transition:transform .12s, opacity .15s}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:linear-gradient(150deg,var(--c),var(--c2));color:var(--on);border-color:transparent;font-size:16px;padding:16px 12px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.foot{font-size:12.5px;color:var(--muted);text-align:center;line-height:1.5;padding-inline:10px}
 
-/* sheet (add / edit account) */
-.sheet-bg{position:fixed;inset:0;background:rgba(10,10,30,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
-.sheet{background:var(--bg);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:20px max(18px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px;max-height:92vh;overflow:auto}
-.sheet h2{margin:0;font-size:19px}
-.swatches{display:flex;gap:10px}
-.swatches button{width:30px;height:30px;border-radius:50%;border:2px solid transparent}
-.swatches button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 3px var(--bg)}
-.row{display:flex;gap:10px}
-.row .btn{flex:1}
+.toast{position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;transition:opacity .2s, transform .2s;pointer-events:none;z-index:50;white-space:nowrap}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* full-screen customer view */
+.present{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;color:var(--on);
+  background:radial-gradient(90% 60% at 50% 0%, rgba(255,255,255,.2), transparent 60%),linear-gradient(160deg,var(--c),var(--c2));
+  padding:calc(24px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px))}
+.present .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;opacity:.85}
+.present .amt{font-family:var(--f-display);font-size:clamp(44px,14vw,64px);font-weight:800;letter-spacing:-.03em;line-height:1}
+.present .tile{background:#FFFFFF;padding:18px;border-radius:24px;box-shadow:0 20px 50px -20px rgba(0,0,0,.5)}
+.present .qr{width:min(290px,70vw)}
+.present .who{font-size:17px;font-weight:650}
+.present .vpa2{font-family:var(--f-mono);font-size:13px;opacity:.8;overflow-wrap:anywhere}
+.present .done{margin-top:8px;color:var(--on);border:1.5px solid currentColor;padding:11px 30px;border-radius:999px;font-weight:650;opacity:.9}
+
+/* sheets */
+.sheet-bg{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center;z-index:40;animation:fade .18s ease-out}
+.sheet{background:var(--bg);width:100%;max-width:480px;border-radius:26px 26px 0 0;padding:10px max(20px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:16px;max-height:92vh;overflow:auto;animation:rise .22s cubic-bezier(.2,.8,.2,1)}
+.grab{width:40px;height:4px;border-radius:4px;background:var(--line);align-self:center}
+.sheet h2{margin:0;font-family:var(--f-display);font-size:22px;font-weight:750;letter-spacing:-.02em}
+.f{display:flex;flex-direction:column;gap:6px}
+.f input{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;width:100%}
+.f input:focus{border-color:var(--ink);outline:none}
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.swatches button{width:34px;height:34px;border-radius:11px;position:relative}
+.swatches button[aria-pressed="true"]{box-shadow:0 0 0 2.5px var(--bg),0 0 0 5px var(--ink)}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.err{color:var(--warn);font-size:13.5px;font-weight:600;min-height:1.2em;margin:0}
+.row3{display:flex;gap:10px}
+.row3 .btn{flex:1}
+.btn.ink{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .btn.danger{color:var(--warn)}
-.err{color:var(--warn);font-size:13px;min-height:1em}
-@media (prefers-reduced-motion: reduce){.toast{transition:none}}
+.preview img{width:100%;border-radius:18px;display:block;box-shadow:0 10px 30px -14px rgba(0,0,0,.4)}
+@keyframes rise{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 </style>
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
 
 <div class="wrap">
-  <header>
-    <h1>Collect<span>.</span>Pay</h1>
-    <button class="linkbtn" id="editBtn" type="button">Edit QR</button>
+  <header class="top">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 18 18"><rect x="1" y="1" width="6.5" height="6.5" rx="1.6" fill="#E8930C"/><rect x="10.5" y="1" width="6.5" height="6.5" rx="1.6" fill="#E8930C"/><rect x="1" y="10.5" width="6.5" height="6.5" rx="1.6" fill="#E8930C"/><rect x="10.5" y="10.5" width="3" height="3" rx=".8" fill="#FFFFFF"/><rect x="14" y="14" width="3" height="3" rx=".8" fill="#FFFFFF"/></svg></span>
+      <h1>Collect Pay</h1>
+    </div>
+    <button class="ghost" id="editBtn" type="button">Edit QR</button>
   </header>
 
-  <section class="field" aria-label="Choose QR">
-    <span class="lbl">Collect into</span>
+  <section class="sec" aria-label="Choose QR">
+    <div class="sec-head"><span class="lbl">Collect into</span></div>
     <div class="accts" id="accts" role="group"></div>
   </section>
 
-  <section class="field">
-    <label class="lbl" for="amt">Amount to request</label>
-    <div class="amount"><span class="rs">₹</span><input id="amt" inputmode="decimal" autocomplete="off" placeholder="0" value="1250"></div>
-    <div class="quick" id="quick"></div>
+  <section class="sec">
+    <label class="lbl" for="amt">Amount</label>
+    <div class="amount"><span class="rs">₹</span><input id="amt" inputmode="decimal" autocomplete="off" placeholder="0" value="1250" aria-label="Amount in rupees"></div>
+    <div class="chips" id="quick"></div>
+    <div class="note-in">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 11.5V13.5H4.5L12 6 10 4 2.5 11.5ZM11 3l2 2 1-1a1.4 1.4 0 0 0-2-2l-1 1Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+      <input id="note" maxlength="40" placeholder="Note for payer, e.g. Order #214" value="Birthday decor order" aria-label="Note for payer">
+    </div>
   </section>
 
-  <section class="field">
-    <label class="lbl" for="note">Note for payer (optional)</label>
-    <input id="note" maxlength="50" placeholder="e.g. Order #214, balloons" value="Birthday decor order">
-  </section>
+  <section class="sec" id="passWrap" aria-live="polite"></section>
 
-  <section class="card" id="card" aria-live="polite"></section>
-  <p class="hint">Customer scans with GPay, PhonePe, Paytm or any UPI app. The amount is already filled in for them.</p>
+  <div class="actions">
+    <button class="btn primary" type="button" id="shareBtn">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 11.5V2.5M9 2.5 5.5 6M9 2.5 12.5 6M3.5 9.5v4.5a1.5 1.5 0 0 0 1.5 1.5h8a1.5 1.5 0 0 0 1.5-1.5V9.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Share QR
+    </button>
+    <div class="duo">
+      <button class="btn" type="button" id="showBtn">
+        <svg width="17" height="17" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M2.5 6.5v-4h4M15.5 6.5v-4h-4M2.5 11.5v4h4M15.5 11.5v4h-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Full screen
+      </button>
+      <button class="btn" type="button" id="copyBtn">
+        <svg width="17" height="17" viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="6" y="6" width="9.5" height="9.5" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M12 6V4a1.5 1.5 0 0 0-1.5-1.5h-6A1.5 1.5 0 0 0 3 4v6.5A1.5 1.5 0 0 0 4.5 12H6" stroke="currentColor" stroke-width="1.6"/></svg>
+        Copy UPI ID
+      </button>
+    </div>
+  </div>
+  <p class="foot">Customers scan with GPay, PhonePe, Paytm, BHIM or any UPI app. The amount is already filled in. Always confirm the payment in your own bank app.</p>
 </div>
 
 <div class="toast" id="toast" role="status"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-const COLORS=["#f2a20c","#2d2f7a","#1f7a4d","#c2185b","#0277bd","#6d4c41"];
+const PALETTE=[["Marigold","#E8930C"],["Indigo","#2D2F7A"],["Emerald","#12795A"],["Rani pink","#C2185B"],["Peacock","#0E6E8C"],["Plum","#5B2A86"],["Clay","#B4451F"],["Ink","#1E2233"]];
 const KEY="collectpay.v1";
+const IS_APP=!!window.Android;
 let state={accounts:[
-  {id:"a1",label:"Shop counter",vpa:"example@upi",name:"Your Shop Name",color:COLORS[0],example:true},
-  {id:"a2",label:"Wholesale",vpa:"example2@upi",name:"Your Business Name",color:COLORS[1],example:true}
+  {id:"a1",label:"Shop counter",vpa:"example@upi",name:"Your Shop Name",color:"#2D2F7A",example:true},
+  {id:"a2",label:"Wholesale",vpa:"example2@upi",name:"Your Business Name",color:"#E8930C",example:true}
 ],active:"a1"};
 try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&Array.isArray(s.accounts))state=s;}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
 
 const $=id=>document.getElementById(id);
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const active=()=>state.accounts.find(a=>a.id===state.active)||state.accounts[0];
+const isSample=a=>a&&(a.example||/^example/i.test(a.vpa));
 
-function parseAmt(v){
-  v=String(v).replace(/[,\s₹]/g,"");
-  if(!/^\d+(\.\d{0,2})?$/.test(v))return null;
-  const n=parseFloat(v);return n>0&&n<=100000?n:null;
-}
+/* colour helpers */
+function rgb(h){h=String(h).replace("#","");if(h.length===3)h=h.split("").map(c=>c+c).join("");const n=parseInt(h,16)||0;return[n>>16&255,n>>8&255,n&255]}
+function shade(h,f){return "rgb("+rgb(h).map(v=>Math.round(f<0?v*(1+f):v+(255-v)*f)).join(",")+")"}
+function lum(h){const c=rgb(h).map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*c[0]+.7152*c[1]+.0722*c[2]}
+function tones(h){const light=lum(h)>.3;return{c:shade(h,.06),c2:shade(h,light?-.14:-.34),on:light?"#1B1406":"#FFFFFF",tint:shade(h,.9)}}
+function applyTones(el,h){const t=tones(h);el.style.setProperty("--c",t.c);el.style.setProperty("--c2",t.c2);el.style.setProperty("--on",t.on)}
+
+/* money */
+function parseAmt(v){v=String(v).replace(/[,\s₹]/g,"");if(!/^\d+(\.\d{0,2})?$/.test(v))return null;const n=parseFloat(v);return n>0&&n<=100000?n:null}
 const fmt=n=>"₹"+n.toLocaleString("en-IN",{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2});
 
 function upiLink(a,n,note){
   const p=new URLSearchParams();
-  p.set("pa",a.vpa.trim());p.set("pn",a.name.trim()||a.label);
+  p.set("pa",a.vpa.trim());p.set("pn",(a.name||a.label).trim());
   p.set("am",n.toFixed(2));p.set("cu","INR");
   if(note)p.set("tn",note);
   return "upi://pay?"+p.toString().replace(/\+/g,"%20");
 }
+function makeQR(text,px){
+  if(typeof QRCode==="undefined")throw new Error("lib");
+  const holder=document.createElement("div");
+  new QRCode(holder,{text,width:px,height:px,colorDark:"#000000",colorLight:"#FFFFFF",correctLevel:QRCode.CorrectLevel.M});
+  const src=holder.querySelector("canvas");if(!src)throw new Error("canvas");
+  const c=document.createElement("canvas");c.width=px;c.height=px;
+  const x=c.getContext("2d");x.imageSmoothingEnabled=false;x.drawImage(src,0,0);return c;
+}
 
+/* ---------- rendering ---------- */
 function renderAccts(){
-  $("accts").innerHTML=state.accounts.map(a=>`<button type="button" class="acct" data-id="${a.id}" aria-pressed="${a.id===state.active}"><b><span class="dot" style="background:${esc(a.color)}"></span>${esc(a.label)}</b><small>${esc(a.vpa)}</small></button>`).join("")+`<button type="button" class="acct add" id="addAcct">+ Add QR</button>`;
+  $("accts").innerHTML=state.accounts.map(a=>{const t=tones(a.color);
+    return `<button type="button" class="acct" data-id="${esc(a.id)}" aria-pressed="${a.id===state.active}">
+      <span class="av" style="background:linear-gradient(150deg,${t.c},${t.c2});color:${t.on}">${esc((a.label||"?").trim().charAt(0).toUpperCase())}</span>
+      <span class="t"><b>${esc(a.label)}</b><small>${esc(a.vpa)}</small></span></button>`}).join("")+
+    `<button type="button" class="acct add" id="addAcct"><span class="plus">+</span>Add QR</button>`;
 }
 function renderQuick(){
-  $("quick").innerHTML=[100,500,1000,2000,5000].map(v=>`<button type="button" data-v="${v}">${fmt(v)}</button>`).join("");
+  $("quick").innerHTML=[100,500,1000,2000,5000].map(v=>`<button type="button" class="chip" data-v="${v}">${fmt(v)}</button>`).join("")+
+    `<button type="button" class="chip plus" data-add="100">+ ₹100</button>`;
 }
 
-let lastLink=null;
-function renderCard(){
-  const a=active(),card=$("card");
-  if(!a){card.innerHTML=`<div class="empty">Add a QR to start collecting.</div>`;lastLink=null;return}
+let current=null; // {a,n,note,link}
+function renderPass(){
+  const a=active(),w=$("passWrap");
+  const btns=["shareBtn","showBtn","copyBtn"];
+  if(!a){w.innerHTML=`<div class="warn">Add a QR to start collecting payments.</div>`;current=null;btns.forEach(b=>$(b).disabled=true);return}
+  applyTones(document.documentElement,a.color);
   const n=parseAmt($("amt").value),note=$("note").value.trim();
-  const warn=a.example||/^example/i.test(a.vpa)?`<div class="warn">This is a sample UPI ID. Tap <b>Edit QR</b> and enter your real UPI ID before asking anyone to pay.</div>`:"";
-  if(!n){
-    card.innerHTML=`${warn}<div class="empty">Enter an amount above ₹0 (up to ₹1,00,000) to make the QR.</div>`;lastLink=null;return;
+  const warn=isSample(a)?`<div class="warn">This is a <b>sample UPI ID</b>. Tap <b>Edit QR</b> and enter your real UPI ID before asking anyone to pay.</div>`:"";
+  current=n?{a,n,note,link:upiLink(a,n,note)}:null;
+  w.innerHTML=`${warn}<article class="pass">
+    <div class="pass-top">
+      <div class="row"><span>Payment request</span><span>${esc(a.label)}</span></div>
+      <div class="pass-amt${n?"":" dim"}">${n?fmt(n):"₹ —"}</div>
+      <div class="pass-to">to <b>${esc(a.name)}</b></div>
+      ${note?`<div class="pass-note">${esc(note)}</div>`:""}
+    </div>
+    <div class="pass-bottom">
+      <div class="qr" id="qr"></div>
+      <div class="vpa">${esc(a.vpa)}</div>
+      <div class="apps">Scan with <span>GPay</span><i>·</i><span>PhonePe</span><i>·</i><span>Paytm</span><i>·</i><span>BHIM</span></div>
+    </div></article>`;
+  const box=$("qr");
+  if(!current){box.innerHTML=`<div class="ph">Enter an amount above ₹0, up to ₹1,00,000</div>`}
+  else{
+    try{box.appendChild(makeQR(current.link,480))}
+    catch(e){box.innerHTML=`<div class="ph">${e.message==="lib"?"QR tool didn't load. Check your internet and reopen.":"Couldn't make this QR. Try a shorter note."}</div>`;current=null}
   }
-  lastLink=upiLink(a,n,note);
-  card.innerHTML=`${warn}<div class="payto"><span class="lbl">Pay to · ${esc(a.label)}</span><span class="who">${esc(a.name)}</span><span class="vpa">${esc(a.vpa)}</span></div>
-  <div class="qrbox" id="qr"></div>
-  <div class="big">${fmt(n)}</div>${note?`<div class="note">${esc(note)}</div>`:""}
-  <div class="actions"><button class="btn primary" type="button" id="showBtn">Show to customer</button><button class="btn" type="button" id="copyBtn">${window.Android?"Share pay link":"Copy pay link"}</button></div>`;
-  drawQR($("qr"),lastLink,240);
+  $("shareBtn").disabled=$("showBtn").disabled=!current;
+  $("copyBtn").disabled=false;
 }
-function drawQR(el,text,size){
-  el.innerHTML="";
-  if(typeof QRCode==="undefined"){el.textContent="QR library didn't load. Check your connection.";return}
-  new QRCode(el,{text,width:size*2,height:size*2,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
-}
-function toast(t){const e=$("toast");e.textContent=t;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),1800)}
+function renderAll(){renderAccts();renderPass()}
 
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),1900)}
+
+/* ---------- shareable image ---------- */
+function rr(x,X,Y,W,H,R){x.beginPath();x.moveTo(X+R,Y);x.arcTo(X+W,Y,X+W,Y+H,R);x.arcTo(X+W,Y+H,X,Y+H,R);x.arcTo(X,Y+H,X,Y,R);x.arcTo(X,Y,X+W,Y,R);x.closePath()}
+function fit(x,s,max){if(x.measureText(s).width<=max)return s;while(s.length>1&&x.measureText(s+"…").width>max)s=s.slice(0,-1);return s+"…"}
+async function buildCard(){
+  const {a,n,note,link}=current,t=tones(a.color);
+  try{await Promise.race([Promise.all([document.fonts.load('800 150px "Bricolage Grotesque"'),document.fonts.load('600 40px "Hanken Grotesk"'),document.fonts.load('600 34px "JetBrains Mono"')]),new Promise(r=>setTimeout(r,1200))])}catch(e){}
+  const W=1080,H=1560,cv=document.createElement("canvas");cv.width=W;cv.height=H;const x=cv.getContext("2d");
+  const D='"Bricolage Grotesque","Hanken Grotesk",system-ui,sans-serif',B='"Hanken Grotesk",system-ui,sans-serif',M='"JetBrains Mono",ui-monospace,monospace';
+  const ls=v=>{if("letterSpacing" in x)x.letterSpacing=v};
+  x.fillStyle=t.tint;x.fillRect(0,0,W,H);
+  const cx=60,cy=60,cw=960,ch=1440,split=600;
+  x.save();x.shadowColor="rgba(20,20,60,.18)";x.shadowBlur=60;x.shadowOffsetY=24;rr(x,cx,cy,cw,ch,56);x.fillStyle="#FFFFFF";x.fill();x.restore();
+  x.save();rr(x,cx,cy,cw,ch,56);x.clip();
+  const g=x.createLinearGradient(cx,cy,cx+cw*.7,cy+split);g.addColorStop(0,t.c);g.addColorStop(1,t.c2);x.fillStyle=g;x.fillRect(cx,cy,cw,split-cy);
+  const hl=x.createRadialGradient(cx+cw,cy,0,cx+cw,cy,620);hl.addColorStop(0,"rgba(255,255,255,.24)");hl.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=hl;x.fillRect(cx,cy,cw,split-cy);
+  x.fillStyle="#FFFFFF";x.fillRect(cx,split,cw,cy+ch-split);
+  x.fillStyle=t.on;x.textBaseline="alphabetic";
+  x.globalAlpha=.85;x.font=`700 28px ${B}`;ls("5px");x.textAlign="left";x.fillText("PAYMENT REQUEST",cx+64,cy+92);
+  x.textAlign="right";x.fillText(fit(x,a.label.toUpperCase(),380),cx+cw-64,cy+92);ls("0px");x.globalAlpha=1;
+  x.textAlign="left";let fs=150;x.font=`800 ${fs}px ${D}`;while(x.measureText(fmt(n)).width>cw-128&&fs>70){fs-=6;x.font=`800 ${fs}px ${D}`}
+  ls(`-${Math.round(fs*.03)}px`);x.fillText(fmt(n),cx+60,cy+262);ls("0px");
+  x.font=`500 42px ${B}`;const pre="to ";x.globalAlpha=.9;x.fillText(pre,cx+64,cy+338);const pw=x.measureText(pre).width;
+  x.globalAlpha=1;x.font=`700 42px ${B}`;x.fillText(fit(x,a.name,cw-128-pw),cx+64+pw,cy+338);
+  if(note){x.font=`600 30px ${B}`;const s=fit(x,note,cw-170),w=x.measureText(s).width+48;
+    x.fillStyle=t.on==="#FFFFFF"?"rgba(255,255,255,.2)":"rgba(0,0,0,.1)";rr(x,cx+64,cy+384,w,58,29);x.fill();x.fillStyle=t.on;x.fillText(s,cx+88,cy+424)}
+  x.restore();
+  // perforation
+  x.save();x.setLineDash([16,14]);x.strokeStyle="#D6D6E4";x.lineWidth=4;x.beginPath();x.moveTo(cx+50,split);x.lineTo(cx+cw-50,split);x.stroke();x.restore();
+  x.fillStyle=t.tint;x.beginPath();x.arc(cx,split,32,0,Math.PI*2);x.arc(cx+cw,split,32,0,Math.PI*2);x.fill();
+  // QR
+  const q=600,qc=makeQR(link,q);x.imageSmoothingEnabled=false;x.drawImage(qc,(W-q)/2,split+70);
+  x.textAlign="center";x.fillStyle="#17182E";x.font=`600 34px ${M}`;x.fillText(fit(x,a.vpa,cw-120),W/2,split+q+140);
+  x.fillStyle="#6A6B86";x.font=`500 30px ${B}`;x.fillText("Scan with GPay · PhonePe · Paytm · BHIM",W/2,split+q+196);
+  x.font=`500 26px ${B}`;x.fillStyle="#9A9BB3";x.fillText("Amount is filled in. Just approve with your UPI PIN.",W/2,split+q+244);
+  return cv;
+}
+function shareText(c){return `Payment request: ${fmt(c.n)} to ${c.a.name}${c.note?` for ${c.note}`:""}.\nScan the QR with any UPI app, or pay to UPI ID: ${c.a.vpa}`}
+
+async function shareQR(){
+  if(!current)return;
+  const btn=$("shareBtn");btn.disabled=true;
+  try{
+    const cv=await buildCard(),url=cv.toDataURL("image/png"),text=shareText(current);
+    if(IS_APP&&Android.shareImage){Android.shareImage(url.split(",")[1],text);return}
+    const blob=await new Promise(r=>cv.toBlob(r,"image/png"));
+    const file=blob&&new File([blob],"payment-qr.png",{type:"image/png"});
+    if(file&&navigator.canShare&&navigator.canShare({files:[file]})){
+      try{await navigator.share({files:[file],text});return}catch(e){if(e&&e.name==="AbortError")return}
+    }
+    openPreview(url,text);
+  }catch(e){toast("Couldn't make the image. Try again.")}
+  finally{btn.disabled=!current}
+}
+function openPreview(url,text){
+  const bg=sheetShell(`<h2>Share this QR</h2>
+    <div class="preview"><img src="${url}" alt="Payment QR card for ${esc(fmt(current.n))}"></div>
+    <p class="hint">Press and hold the image to save or share it. Or copy the message below and send it with the image.</p>
+    <div class="row3"><button type="button" class="btn" data-close>Close</button><button type="button" class="btn ink" id="pvCopy">Copy message</button></div>`);
+  bg.querySelector("#pvCopy").onclick=()=>copyText(text,"Message copied");
+}
+
+/* ---------- customer view ---------- */
 function present(){
-  const a=active(),n=parseAmt($("amt").value),note=$("note").value.trim();if(!lastLink)return;
+  if(!current)return;const {a,n,note,link}=current;
   const d=document.createElement("div");d.className="present";d.setAttribute("role","dialog");d.setAttribute("aria-label","Payment QR");
-  d.innerHTML=`<div class="scan">Scan to pay</div><div class="big">${fmt(n)}</div><div class="qrbox" id="qr2"></div><div><div class="who">${esc(a.name)}</div><div class="vpa">${esc(a.vpa)}</div></div>${note?`<div class="apps">${esc(note)}</div>`:""}<div class="apps">GPay · PhonePe · Paytm · BHIM · any UPI app</div><button class="close" type="button">Done</button>`;
-  document.body.appendChild(d);drawQR(d.querySelector("#qr2"),lastLink,300);
+  applyTones(d,a.color);
+  d.innerHTML=`<div class="eyebrow">Scan to pay</div><div class="amt">${fmt(n)}</div>
+    <div class="tile"><div class="qr" id="qr2"></div></div>
+    <div><div class="who">${esc(a.name)}</div><div class="vpa2">${esc(a.vpa)}</div></div>
+    ${note?`<div class="eyebrow" style="letter-spacing:.04em;text-transform:none">${esc(note)}</div>`:""}
+    <button class="done" type="button">Done</button>`;
+  document.body.appendChild(d);d.querySelector("#qr2").appendChild(makeQR(link,600));
   try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(l=>d._lock=l).catch(()=>{})}catch(e){}
-  try{window.Android&&Android.keepAwake(true)}catch(e){}
-  const close=()=>{try{d._lock&&d._lock.release()}catch(e){}try{window.Android&&Android.keepAwake(false)}catch(e){}d.remove()};
-  d.querySelector(".close").onclick=close;d.querySelector(".close").focus();
+  try{IS_APP&&Android.keepAwake(true)}catch(e){}
+  const close=()=>{try{d._lock&&d._lock.release()}catch(e){}try{IS_APP&&Android.keepAwake(false)}catch(e){}d.remove()};
+  const done=d.querySelector(".done");done.onclick=close;done.focus();
   d.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
 }
 
-function sheet(acct){
-  const isNew=!acct;acct=acct||{id:"a"+Date.now(),label:"",vpa:"",name:"",color:COLORS[state.accounts.length%COLORS.length]};
-  let color=acct.color;
+/* ---------- sheets ---------- */
+function sheetShell(html){
   const bg=document.createElement("div");bg.className="sheet-bg";
-  bg.innerHTML=`<form class="sheet" novalidate><h2>${isNew?"Add a QR":"Edit QR"}</h2>
-  <div class="field"><label class="lbl" for="f_label">Name this QR</label><input id="f_label" placeholder="e.g. Shop counter, Wholesale, Personal" value="${esc(acct.label)}"></div>
-  <div class="field"><label class="lbl" for="f_vpa">UPI ID</label><input id="f_vpa" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="yourname@okhdfcbank" value="${acct.example?"":esc(acct.vpa)}"></div>
-  <div class="field"><label class="lbl" for="f_name">Name customers see</label><input id="f_name" placeholder="Business or account holder name" value="${acct.example?"":esc(acct.name)}"></div>
-  <div class="field"><span class="lbl">Colour</span><div class="swatches">${COLORS.map(c=>`<button type="button" data-c="${c}" aria-label="Colour ${c}" aria-pressed="${c===color}" style="background:${c}"></button>`).join("")}</div></div>
-  <p class="hint">Find your UPI ID in your bank or UPI app under Profile. It looks like name@bank.</p>
-  <div class="err" id="f_err"></div>
-  <div class="row">${isNew?"":`<button type="button" class="btn danger" id="f_del">Delete</button>`}<button type="button" class="btn" id="f_cancel">Cancel</button><button type="submit" class="btn primary">Save</button></div></form>`;
+  bg.innerHTML=`<div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`;
   document.body.appendChild(bg);
-  const f=bg.querySelector("form");let confirmDel=false;
-  bg.querySelectorAll(".swatches button").forEach(b=>b.onclick=()=>{color=b.dataset.c;bg.querySelectorAll(".swatches button").forEach(x=>x.setAttribute("aria-pressed",x===b))});
-  bg.querySelector("#f_cancel").onclick=()=>bg.remove();
-  bg.addEventListener("click",e=>{if(e.target===bg)bg.remove()});
-  const del=bg.querySelector("#f_del");
+  bg.addEventListener("click",e=>{if(e.target===bg||e.target.closest("[data-close]"))bg.remove()});
+  bg.addEventListener("keydown",e=>{if(e.key==="Escape")bg.remove()});
+  return bg;
+}
+function editSheet(acct){
+  const isNew=!acct;
+  acct=acct||{id:"a"+Date.now(),label:"",vpa:"",name:"",color:PALETTE[state.accounts.length%PALETTE.length][1]};
+  let color=acct.color,sample=isSample(acct);
+  const bg=sheetShell(`<form class="sheet-form" novalidate style="display:flex;flex-direction:column;gap:16px">
+    <h2>${isNew?"Add a QR":"Edit QR"}</h2>
+    <div class="f"><label class="lbl" for="f_label">Name this QR</label><input id="f_label" placeholder="Shop counter, Wholesale, Personal…" value="${esc(acct.label)}"></div>
+    <div class="f"><label class="lbl" for="f_vpa">UPI ID</label><input id="f_vpa" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="yourname@okhdfcbank" value="${sample?"":esc(acct.vpa)}"></div>
+    <div class="f"><label class="lbl" for="f_name">Name customers see</label><input id="f_name" placeholder="Business or account holder name" value="${sample?"":esc(acct.name)}"></div>
+    <div class="f"><span class="lbl">Colour</span><div class="swatches">${PALETTE.map(([nm,c])=>`<button type="button" data-c="${c}" aria-label="${nm}" aria-pressed="${c.toLowerCase()===String(color).toLowerCase()}" style="background:${c}"></button>`).join("")}</div></div>
+    <p class="hint">Find your UPI ID in your bank or UPI app under Profile. It looks like name@bank.</p>
+    <p class="err" id="f_err"></p>
+    <div class="row3">${isNew?"":`<button type="button" class="btn danger" id="f_del">Delete</button>`}<button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn ink">Save</button></div>
+  </form>`);
+  const f=bg.querySelector("form"),sw=[...bg.querySelectorAll(".swatches button")];
+  sw.forEach(b=>b.onclick=()=>{color=b.dataset.c;sw.forEach(x=>x.setAttribute("aria-pressed",x===b))});
+  const del=bg.querySelector("#f_del");let armed=false;
   if(del)del.onclick=()=>{
-    if(!confirmDel){confirmDel=true;del.textContent="Tap again to delete";return}
+    if(!armed){armed=true;del.textContent="Tap to confirm";return}
     state.accounts=state.accounts.filter(a=>a.id!==acct.id);
-    if(state.active===acct.id)state.active=state.accounts[0]?.id;save();bg.remove();renderAll();toast("QR deleted");
+    if(state.active===acct.id)state.active=state.accounts[0]&&state.accounts[0].id;
+    save();bg.remove();renderAll();toast("QR deleted");
   };
   f.onsubmit=e=>{
     e.preventDefault();
-    const label=f.f_label.value.trim(),vpa=f.f_vpa.value.trim().toLowerCase(),name=f.f_name.value.trim();
-    if(!label)return $("f_err").textContent="Give this QR a name, like Shop counter.";
-    if(!/^[a-z0-9.\-_]{2,256}@[a-z][a-z0-9.\-]{1,64}$/.test(vpa))return $("f_err").textContent="That UPI ID doesn't look right. It should look like name@bank.";
-    if(!name)return $("f_err").textContent="Add the name customers will see when paying.";
+    const label=f.f_label.value.trim(),vpa=f.f_vpa.value.trim().toLowerCase(),name=f.f_name.value.trim(),err=bg.querySelector("#f_err");
+    if(!label)return err.textContent="Give this QR a name, like Shop counter.";
+    if(!/^[a-z0-9.\-_]{2,256}@[a-z][a-z0-9.\-]{1,64}$/.test(vpa))return err.textContent="That UPI ID doesn't look right. It should look like name@bank.";
+    if(!name)return err.textContent="Add the name customers will see when they pay.";
     const rec={id:acct.id,label,vpa,name,color};
     const i=state.accounts.findIndex(a=>a.id===acct.id);
     if(i>=0)state.accounts[i]=rec;else state.accounts.push(rec);
     state.active=rec.id;save();bg.remove();renderAll();toast("QR saved");
   };
-  f.f_label.focus();
+  setTimeout(()=>f.f_label.focus(),50);
 }
 
-function renderAll(){renderAccts();renderCard()}
+/* ---------- copy ---------- */
+function copyText(text,msg){
+  if(IS_APP&&Android.copy){try{Android.copy(text);return}catch(e){}}
+  const fb=()=>{const t=document.createElement("textarea");t.value=text;t.setAttribute("readonly","");t.style.position="fixed";t.style.opacity="0";document.body.appendChild(t);t.select();
+    let ok=false;try{ok=document.execCommand("copy")}catch(e){}t.remove();toast(ok?msg:"Couldn't copy. Select the text and copy it.")};
+  try{navigator.clipboard.writeText(text).then(()=>toast(msg)).catch(fb)}catch(e){fb()}
+}
 
+/* ---------- events ---------- */
 $("accts").addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b)return;
-  if(b.id==="addAcct")return sheet();
+  if(b.id==="addAcct")return editSheet();
   state.active=b.dataset.id;save();renderAll();
 });
-$("editBtn").onclick=()=>{const a=active();a?sheet(a):sheet()};
-$("quick").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;$("amt").value=b.dataset.v;renderCard()});
-$("amt").addEventListener("input",()=>{clearTimeout(renderCard.t);renderCard.t=setTimeout(renderCard,250)});
-$("note").addEventListener("input",()=>{clearTimeout(renderCard.t);renderCard.t=setTimeout(renderCard,350)});
-$("card").addEventListener("click",e=>{
-  if(e.target.id==="showBtn")present();
-  if(e.target.id==="copyBtn"&&lastLink&&window.Android){
-    const a=active(),n=parseAmt($("amt").value);
-    try{Android.share(`Please pay ${fmt(n)} to ${a.name} (${a.vpa}) via UPI:\n${lastLink}`)}catch(err){}
-    return;
-  }
-  if(e.target.id==="copyBtn"&&lastLink){
-    const done=()=>toast("Pay link copied");
-    try{navigator.clipboard.writeText(lastLink).then(done).catch(()=>fallbackCopy())}catch(err){fallbackCopy()}
-  }
-});
-function fallbackCopy(){
-  const t=document.createElement("textarea");t.value=lastLink;document.body.appendChild(t);t.select();
-  try{document.execCommand("copy");toast("Pay link copied")}catch(e){toast("Couldn't copy. Long-press to copy instead.")}t.remove();
-}
+$("editBtn").onclick=()=>{const a=active();editSheet(a||null)};
+$("quick").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.add){const cur=parseAmt($("amt").value)||0;$("amt").value=String(Math.min(100000,cur+Number(b.dataset.add)))}
+  else $("amt").value=b.dataset.v;
+  renderPass()});
+$("amt").addEventListener("input",e=>{
+  let v=e.target.value.replace(/[^\d.]/g,"");const i=v.indexOf(".");if(i>=0)v=v.slice(0,i+1)+v.slice(i+1).replace(/\./g,"").slice(0,2);
+  if(v!==e.target.value)e.target.value=v;
+  clearTimeout(renderPass.t);renderPass.t=setTimeout(renderPass,200)});
+$("note").addEventListener("input",()=>{clearTimeout(renderPass.t);renderPass.t=setTimeout(renderPass,300)});
+$("shareBtn").onclick=shareQR;
+$("showBtn").onclick=present;
+$("copyBtn").onclick=()=>{const a=active();if(a)copyText(a.vpa,"UPI ID copied")};
+
 renderQuick();renderAll();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{});
 </script>
 </body>
 </html>
