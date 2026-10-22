@@ -6,7 +6,8 @@ A one-page payment request app for UPI. Type the amount, pick which account to c
 
 - Multiple QRs: save several UPI IDs (shop counter, wholesale, personal) and switch with one tap
 - Amount and an optional note are built into the QR
-- Full-screen "Show to customer" mode
+- Swipe the QR card to switch between saved QRs
+- Full-screen mode for the counter
 - Share QR: sends a ready-made payment card image to WhatsApp or any app
 - Works in light and dark mode, on any phone browser
 

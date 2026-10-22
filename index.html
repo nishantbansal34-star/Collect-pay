@@ -28,6 +28,7 @@
 
 *{box-sizing:border-box}
 html,body{background:var(--bg)}
+body{overflow-x:clip}
 body{color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent}
 button{font:inherit;cursor:pointer;border:0;background:none;color:inherit;padding:0}
 button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
@@ -75,7 +76,17 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 /* the pass */
 .warn{background:var(--warn-bg);color:var(--warn);border-radius:14px;padding:11px 14px;font-size:13.5px;line-height:1.4}
 .warn b{font-weight:700}
-.pass{border-radius:26px;overflow:hidden;position:relative;box-shadow:0 1px 0 rgba(0,0,0,.04),0 18px 40px -18px rgba(20,20,60,.35)}
+.pass{border-radius:26px;overflow:hidden;position:relative;box-shadow:0 1px 0 rgba(0,0,0,.04),0 18px 40px -18px rgba(20,20,60,.35);touch-action:pan-y;user-select:none;-webkit-user-select:none;will-change:transform}
+.pass.dragging{transition:none}
+.pass.settle{transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .28s}
+.pass.inR{animation:inR .36s cubic-bezier(.2,.8,.2,1)}
+.pass.inL{animation:inL .36s cubic-bezier(.2,.8,.2,1)}
+@keyframes inR{from{transform:translateX(70%) rotate(4deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes inL{from{transform:translateX(-70%) rotate(-4deg);opacity:0}to{transform:none;opacity:1}}
+.dots{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:2px}
+.dots button{width:7px;height:7px;border-radius:999px;background:var(--line);transition:width .25s, background .25s}
+.dots button[aria-current="true"]{width:22px;background:var(--ink)}
+.swipe-hint{font-size:12px;color:var(--muted);text-align:center;margin:-2px 0 0}
 .pass-top{color:var(--on);padding:20px 22px 26px;background:
   radial-gradient(120% 90% at 100% 0%, rgba(255,255,255,.22), transparent 55%),
   radial-gradient(60% 80% at 0% 100%, rgba(0,0,0,.14), transparent 60%),
@@ -165,11 +176,11 @@ button:focus-visible,input:focus-visible{outline:2.5px solid var(--accent);outli
 
   <section class="sec">
     <label class="lbl" for="amt">Amount</label>
-    <div class="amount"><span class="rs">₹</span><input id="amt" inputmode="decimal" autocomplete="off" placeholder="0" value="1250" aria-label="Amount in rupees"></div>
+    <div class="amount"><span class="rs">₹</span><input id="amt" inputmode="decimal" autocomplete="off" placeholder="0" value="" enterkeyhint="done" aria-label="Amount in rupees"></div>
     <div class="chips" id="quick"></div>
     <div class="note-in">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 11.5V13.5H4.5L12 6 10 4 2.5 11.5ZM11 3l2 2 1-1a1.4 1.4 0 0 0-2-2l-1 1Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
-      <input id="note" maxlength="40" placeholder="Note for payer, e.g. Order #214" value="Birthday decor order" aria-label="Note for payer">
+      <input id="note" maxlength="40" placeholder="Note for payer (optional)" value="" aria-label="Note for payer">
     </div>
   </section>
 
@@ -254,7 +265,7 @@ function renderQuick(){
 }
 
 let current=null; // {a,n,note,link}
-function renderPass(){
+function renderPass(dir){
   const a=active(),w=$("passWrap");
   const btns=["shareBtn","showBtn","copyBtn"];
   if(!a){w.innerHTML=`<div class="warn">Add a QR to start collecting payments.</div>`;current=null;btns.forEach(b=>$(b).disabled=true);return}
@@ -273,7 +284,10 @@ function renderPass(){
       <div class="qr" id="qr"></div>
       <div class="vpa">${esc(a.vpa)}</div>
       <div class="apps">Scan with <span>GPay</span><i>·</i><span>PhonePe</span><i>·</i><span>Paytm</span><i>·</i><span>BHIM</span></div>
-    </div></article>`;
+    </div></article>${state.accounts.length>1?`<div class="dots">${state.accounts.map(x=>`<button type="button" data-id="${esc(x.id)}" aria-label="${esc(x.label)}" aria-current="${x.id===a.id}"></button>`).join("")}</div><p class="swipe-hint">Swipe the card to switch QR</p>`:""}`;
+  const pass=w.querySelector(".pass");
+  if(dir)pass.classList.add(dir>0?"inR":"inL");
+  attachSwipe(pass);
   const box=$("qr");
   if(!current){box.innerHTML=`<div class="ph">Enter an amount above ₹0, up to ₹1,00,000</div>`}
   else{
@@ -283,7 +297,50 @@ function renderPass(){
   $("shareBtn").disabled=$("showBtn").disabled=!current;
   $("copyBtn").disabled=false;
 }
-function renderAll(){renderAccts();renderPass()}
+function renderAll(dir){renderAccts();renderPass(dir);scrollChip()}
+function scrollChip(){
+  const s=$("accts"),el=s.querySelector('[aria-pressed="true"]');if(!el)return;
+  const l=el.offsetLeft-s.offsetLeft-8,r=l+el.offsetWidth+16;
+  if(l<s.scrollLeft||r>s.scrollLeft+s.clientWidth)s.scrollTo({left:Math.max(0,l),behavior:"smooth"});
+}
+
+/* ---------- swipe between QRs ---------- */
+function goTo(id,dir){
+  if(id===state.active)return;
+  const ids=state.accounts.map(a=>a.id);
+  if(!dir)dir=ids.indexOf(id)>ids.indexOf(state.active)?1:-1;
+  state.active=id;save();renderAll(dir);
+}
+function step(dir){
+  const ids=state.accounts.map(a=>a.id),n=ids.length;if(n<2)return;
+  goTo(ids[(ids.indexOf(state.active)+dir+n)%n],dir);
+}
+function attachSwipe(el){
+  let x0=0,y0=0,dx=0,id=null,horiz=null;
+  const multi=state.accounts.length>1;
+  el.addEventListener("pointerdown",e=>{if(e.button)return;id=e.pointerId;x0=e.clientX;y0=e.clientY;dx=0;horiz=null;el.classList.remove("settle","inR","inL")});
+  el.addEventListener("pointermove",e=>{
+    if(e.pointerId!==id)return;
+    const mx=e.clientX-x0,my=e.clientY-y0;
+    if(horiz===null&&(Math.abs(mx)>8||Math.abs(my)>8)){horiz=Math.abs(mx)>Math.abs(my);if(horiz){try{el.setPointerCapture(id)}catch(_){}el.classList.add("dragging")}}
+    if(!horiz)return;
+    dx=multi?mx:mx*.25;
+    el.style.transform=`translateX(${dx}px) rotate(${dx*.03}deg)`;
+    el.style.opacity=String(1-Math.min(.45,Math.abs(dx)/700));
+  });
+  const end=e=>{
+    if(e.pointerId!==id)return;id=null;el.classList.remove("dragging");
+    if(!horiz)return;
+    const go=multi&&Math.abs(dx)>Math.min(90,el.offsetWidth*.22);
+    el.classList.add("settle");
+    if(go){
+      const dir=dx<0?1:-1;
+      el.style.transform=`translateX(${dx<0?-120:120}%) rotate(${dx<0?-6:6}deg)`;el.style.opacity="0";
+      setTimeout(()=>step(dir),170);
+    }else{el.style.transform="";el.style.opacity=""}
+  };
+  el.addEventListener("pointerup",end);el.addEventListener("pointercancel",end);
+}
 
 function toast(t){const e=$("toast");e.textContent=t;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),1900)}
 
@@ -424,7 +481,12 @@ function copyText(text,msg){
 $("accts").addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b)return;
   if(b.id==="addAcct")return editSheet();
-  state.active=b.dataset.id;save();renderAll();
+  goTo(b.dataset.id);
+});
+$("passWrap").addEventListener("click",e=>{const b=e.target.closest(".dots button");if(b)goTo(b.dataset.id)});
+document.addEventListener("keydown",e=>{
+  if(document.querySelector(".sheet-bg,.present")||/INPUT|TEXTAREA/.test(document.activeElement&&document.activeElement.tagName))return;
+  if(e.key==="ArrowRight")step(1);if(e.key==="ArrowLeft")step(-1);
 });
 $("editBtn").onclick=()=>{const a=active();editSheet(a||null)};
 $("quick").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
@@ -441,7 +503,9 @@ $("showBtn").onclick=present;
 $("copyBtn").onclick=()=>{const a=active();if(a)copyText(a.vpa,"UPI ID copied")};
 
 renderQuick();renderAll();
-if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{});
+// Ready for the next customer: cursor in the amount box
+setTimeout(()=>{try{$("amt").focus({preventScroll:true});IS_APP&&Android.showKeyboard&&Android.showKeyboard()}catch(e){}},IS_APP?300:0);
+window.addEventListener("focus",()=>{if(!document.querySelector(".sheet-bg,.present")&&!$("amt").value)try{$("amt").focus({preventScroll:true})}catch(e){}});
 </script>
 </body>
 </html>
