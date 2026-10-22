@@ -44,15 +44,14 @@ public class MainActivity extends Activity {
                 return true;
             }
         });
+        web.setBackgroundColor(0xFF06070A);
         web.loadUrl("file:///android_asset/index.html");
     }
 
     @Override
     public void onBackPressed() {
         // Close the full-screen QR or the edit sheet first, if open.
-        web.evaluateJavascript(
-            "(function(){var p=document.querySelector('.present .close');if(p){p.click();return 1}" +
-            "var s=document.querySelector('.sheet-bg');if(s){s.remove();return 1}return 0})()",
+        web.evaluateJavascript("(window.__back?window.__back():0)",
             v -> { if ("0".equals(v)) MainActivity.super.onBackPressed(); });
     }
 

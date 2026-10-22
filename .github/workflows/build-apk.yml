@@ -32,18 +32,18 @@ jobs:
         run: gradle :app:assembleRelease --no-daemon
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/release/app-release.apk CollectPay.apk
+        run: cp app/build/outputs/apk/release/app-release.apk OrbePay.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: CollectPay-apk
-          path: CollectPay.apk
+          name: OrbePay-apk
+          path: OrbePay.apk
 
       - name: Publish download
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: Collect Pay 1.0.${{ github.run_number }}
+          name: Orbe Pay 1.0.${{ github.run_number }}
           make_latest: true
-          files: CollectPay.apk
-          body: Download CollectPay.apk below and open it on your Android phone to install.
+          files: OrbePay.apk
+          body: Download OrbePay.apk below and open it on your Android phone to install.
