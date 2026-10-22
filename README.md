@@ -1,6 +1,6 @@
-# Orbé Pay
+# Orbe Pay
 
-<img src="icon-512.png" width="96" alt="Orbé Pay icon">
+<img src="icon-512.png" width="96" alt="Orbe Pay logo">
 
 A one-page payment request app for UPI. Type the amount, pick which account to collect into, and show the customer a QR with the amount already filled in. They scan it with GPay, PhonePe, Paytm, BHIM or any UPI app and just approve.
 
