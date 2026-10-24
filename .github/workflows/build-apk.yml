@@ -11,6 +11,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      HAS_KEY: ${{ secrets.PLAY_KEYSTORE_B64 != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -21,23 +23,33 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.7'
+          gradle-version: '8.11.1'
 
-      - name: Copy web app into the APK (QR library bundled for offline use)
-        run: |
-          sed 's#https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js#qrcode.min.js#' index.html > app/src/main/assets/index.html
-          grep -q 'src="qrcode.min.js"' app/src/main/assets/index.html
+      - name: Build the offline app page (bundled QR library and fonts)
+        run: python3 tools/make_app_html.py
 
-      - name: Build APK
-        run: gradle :app:assembleRelease --no-daemon
+      - name: Build APK (direct download)
+        run: gradle :app:assembleRelease --no-daemon --stacktrace
 
       - name: Rename APK
         run: cp app/build/outputs/apk/release/app-release.apk OrbePay.apk
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: OrbePay-apk
-          path: OrbePay.apk
+      # Google Play bundle, signed with the private upload key when the secrets are set
+      - name: Upload key
+        if: env.HAS_KEY == 'true'
+        env:
+          KS: ${{ secrets.PLAY_KEYSTORE_B64 }}
+        run: |
+          echo "$KS" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          echo "PLAY_KEYSTORE=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+
+      - name: Build Play bundle
+        env:
+          PLAY_STORE_PASSWORD: ${{ secrets.PLAY_STORE_PASSWORD }}
+        run: gradle -Pplay :app:bundleRelease --no-daemon --stacktrace
+
+      - name: Name bundle
+        run: cp app/build/outputs/bundle/release/app-release.aab OrbePay-play-${{ github.run_number }}${{ env.HAS_KEY == 'true' && '' || '-UNSIGNED' }}.aab
 
       - name: Publish download
         uses: softprops/action-gh-release@v2
@@ -45,5 +57,9 @@ jobs:
           tag_name: v1.0.${{ github.run_number }}
           name: Orbe Pay 1.0.${{ github.run_number }}
           make_latest: true
-          files: OrbePay.apk
-          body: Download OrbePay.apk below and open it on your Android phone to install.
+          files: |
+            OrbePay.apk
+            OrbePay-play-*.aab
+          body: |
+            OrbePay.apk: open it on your Android phone to install directly.
+            OrbePay-play-*.aab: upload this file to Google Play Console (only when it does not say UNSIGNED).

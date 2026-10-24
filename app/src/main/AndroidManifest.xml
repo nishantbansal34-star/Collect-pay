@@ -5,6 +5,7 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
         android:allowBackup="true"
+        android:enableOnBackInvokedCallback="true"
         android:theme="@style/AppTheme">
         <activity
             android:name=".MainActivity"
@@ -18,7 +19,7 @@
         </activity>
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="in.nrrl.collectpay.files"
+            android:authorities="${applicationId}.files"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

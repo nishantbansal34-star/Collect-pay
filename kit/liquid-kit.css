@@ -1,7 +1,7 @@
 /* ===== Liquid kit: refraction glass, specular rim, touch light, springs, morphs ===== */
 /* drifting light behind the glass so refraction has something to bend */
 .lk-lights{position:fixed;inset:0;pointer-events:none;overflow:hidden}
-.lk-lights i{position:absolute;border-radius:50%;filter:blur(48px);opacity:.55;will-change:transform}
+.lk-lights i{position:absolute;border-radius:50%;opacity:.55;will-change:transform}
 .lk-lights i:nth-child(1){width:62vmin;height:62vmin;left:-14vmin;top:8vh;background:radial-gradient(circle,color-mix(in srgb,var(--c) 85%,#fff 5%),transparent 68%);animation:lkDrift1 23s ease-in-out infinite alternate}
 .lk-lights i:nth-child(2){width:54vmin;height:54vmin;right:-16vmin;top:34vh;background:radial-gradient(circle,rgba(227,196,143,.75),transparent 68%);animation:lkDrift2 29s ease-in-out infinite alternate}
 .lk-lights i:nth-child(3){width:46vmin;height:46vmin;left:24vw;bottom:-12vh;background:radial-gradient(circle,rgba(120,160,235,.6),transparent 70%);animation:lkDrift3 31s ease-in-out infinite alternate}
