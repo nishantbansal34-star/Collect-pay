@@ -34,6 +34,7 @@ import android.widget.Toast;
 public class MainActivity extends Activity {
     private static final String HOST = "app.orbe.local";
     private WebView web;
+    private String insetJs = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,16 +42,31 @@ public class MainActivity extends Activity {
         // Android 15+ draws apps edge to edge: pad the page away from the status/navigation bars,
         // camera cutout and the on-screen keyboard.
         FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(0xFF06070A);
+        root.setBackgroundColor(0xFF1C2232);
         web = new WebView(this);
-        web.setBackgroundColor(0xFF06070A);
+        web.setBackgroundColor(0xFF1C2232);
         web.setOverScrollMode(View.OVER_SCROLL_NEVER);
         root.addView(web, new FrameLayout.LayoutParams(-1, -1));
         if (Build.VERSION.SDK_INT >= 30) {
+            // same edge-to-edge layout on Android 11-14 as Android 15+ enforces
+            getWindow().setDecorFitsSystemWindows(false);
+            getWindow().setStatusBarColor(0x00000000);
+            getWindow().setNavigationBarColor(0x00000000);
+            if (Build.VERSION.SDK_INT >= 29) getWindow().setNavigationBarContrastEnforced(false);
+        }
+        if (Build.VERSION.SDK_INT >= 30) {
+            // The dusk scene runs edge to edge behind the status and navigation bars; the page is told how
+            // big the bars are (as CSS variables) so its buttons and text stay clear of them.
             root.setOnApplyWindowInsetsListener((v, ins) -> {
                 android.graphics.Insets b = ins.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
                 android.graphics.Insets k = ins.getInsets(WindowInsets.Type.ime());
-                v.setPadding(b.left, b.top, b.right, Math.max(b.bottom, k.bottom));
+                v.setPadding(0, 0, 0, Math.max(0, k.bottom - b.bottom));
+                float d = getResources().getDisplayMetrics().density;
+                insetJs = "document.documentElement.style.setProperty('--sat','" + Math.round(b.top / d) + "px');"
+                        + "document.documentElement.style.setProperty('--sab','" + Math.round(b.bottom / d) + "px');"
+                        + "document.documentElement.style.setProperty('--sal','" + Math.round(b.left / d) + "px');"
+                        + "document.documentElement.style.setProperty('--sar','" + Math.round(b.right / d) + "px');";
+                if (web != null) web.evaluateJavascript(insetJs, null);
                 return WindowInsets.CONSUMED;
             });
         }
@@ -79,6 +95,11 @@ public class MainActivity extends Activity {
                 } catch (IOException e) {
                     return new WebResourceResponse("text/plain", "utf-8", 404, "Not found", null, new ByteArrayInputStream(new byte[0]));
                 }
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                if (!insetJs.isEmpty()) view.evaluateJavascript(insetJs, null);
             }
 
             @Override
