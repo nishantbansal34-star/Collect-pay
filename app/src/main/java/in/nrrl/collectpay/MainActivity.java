@@ -42,9 +42,9 @@ public class MainActivity extends Activity {
         // Android 15+ draws apps edge to edge: pad the page away from the status/navigation bars,
         // camera cutout and the on-screen keyboard.
         FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(0xFF1C2232);
+        root.setBackgroundColor(0xFF000000);
         web = new WebView(this);
-        web.setBackgroundColor(0xFF1C2232);
+        web.setBackgroundColor(0xFF000000);
         web.setOverScrollMode(View.OVER_SCROLL_NEVER);
         root.addView(web, new FrameLayout.LayoutParams(-1, -1));
         if (Build.VERSION.SDK_INT >= 30) {
