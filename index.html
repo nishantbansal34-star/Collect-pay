@@ -17,7 +17,7 @@
   --bg:#06070A; --ink:#F2F0EB; --muted:#8A8C96; --faint:#4A4C55;
   --glass:rgba(255,255,255,.045); --glass-2:rgba(255,255,255,.08); --edge:rgba(255,255,255,.09); --edge-hi:rgba(255,255,255,.18);
   --gold:#E3C48F; --gold-deep:#B48E57; --steel:#86A6D6; --navy:#16264A;
-  --warn:#F2B48A; --scrim:rgba(0,0,0,.7);
+  --warn:#F2B48A; --scrim:rgba(0,0,0,.78);
   --f-display:"Outfit", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --f-body:"Outfit", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
@@ -30,7 +30,8 @@ html,body{background:var(--bg);height:100%}
 body{color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;font-weight:400;-webkit-tap-highlight-color:transparent;overflow-x:clip}
 button{font:inherit;cursor:pointer;border:0;background:none;color:inherit;padding:0}
 button:focus-visible,input:focus-visible{outline:1.5px solid var(--gold);outline-offset:3px}
-#stars{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+#bg{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;display:block}
+.grain{position:fixed;inset:0;pointer-events:none;opacity:.55;background-size:128px 128px}
 .view{position:relative;max-width:460px;margin:0 auto;min-height:100%;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));padding-block:10px 22px;display:flex;flex-direction:column;gap:clamp(12px,2vh,18px)}
 .view.enter{animation:viewIn .42s cubic-bezier(.2,.8,.2,1)}
 .view.back{animation:viewBack .38s cubic-bezier(.2,.8,.2,1)}
@@ -76,13 +77,12 @@ button:focus-visible,input:focus-visible{outline:1.5px solid var(--gold);outline
 .ringwrap{display:grid;place-items:center;padding-top:2px}
 .ring{--rs:clamp(150px,23vh,210px);width:var(--rs);height:var(--rs);border-radius:50%;position:relative;display:grid;place-items:center;
   background:radial-gradient(circle at 50% 35%, rgba(255,255,255,.06), rgba(255,255,255,.01) 60%, transparent 72%);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07), inset 0 -20px 40px -20px rgba(134,166,214,.18)}
-.ring::before,.ring::after{content:"";position:absolute;inset:-3px;border-radius:50%;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07), inset 0 -20px 40px -20px rgba(134,166,214,.18), 0 0 46px -14px rgba(227,196,143,.35)}
+.ring::before{content:"";position:absolute;inset:-3px;border-radius:50%;will-change:transform;opacity:.55;transition:opacity .5s ease;
   background:conic-gradient(from 0deg, transparent 0 48%, rgba(134,166,214,.0) 48%, rgba(134,166,214,.9) 66%, #F4E2BC 80%, var(--gold) 86%, transparent 97%);
   -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));mask:radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
-  animation:spin 9s linear infinite}
-.ring::after{filter:blur(9px);opacity:.9;inset:-5px}
-.ring.live::before,.ring.live::after{animation-duration:3.2s}
+  animation:spin 12s linear infinite}
+.ring.live::before{opacity:1}
 @keyframes spin{to{transform:rotate(360deg)}}
 .amt{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;z-index:1;max-width:84%}
 .amtv{font-family:var(--f-display);font-weight:300;font-size:clamp(30px,9.5vw,42px);letter-spacing:-.02em;white-space:nowrap;line-height:1}
@@ -99,7 +99,7 @@ button:focus-visible,input:focus-visible{outline:1.5px solid var(--gold);outline
 .chip{flex:none;font-size:13.5px;font-weight:400;padding:8px 14px;border-radius:999px;background:var(--glass);border:1px solid var(--edge)}
 .chip:active{background:var(--glass-2);border-color:var(--edge-hi)}
 .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-.key{height:clamp(42px,6vh,56px);border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025));border:1px solid var(--edge);font-family:var(--f-display);font-size:23px;font-weight:300;display:grid;place-items:center;transition:background .12s, box-shadow .12s, transform .08s;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.key{height:clamp(42px,6vh,56px);border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.022));border:1px solid var(--edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.07);font-family:var(--f-display);font-size:23px;font-weight:300;display:grid;place-items:center;transition:background .12s, box-shadow .12s;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .key:active,.key.hit{background:rgba(255,255,255,.12);box-shadow:0 0 22px -6px rgba(227,196,143,.55),inset 0 0 0 1px rgba(227,196,143,.35);transform:scale(.97)}
 
 /* primary pill (navy → champagne) */
@@ -120,7 +120,7 @@ button:focus-visible,input:focus-visible{outline:1.5px solid var(--gold);outline
 .pass{position:relative;border-radius:28px;padding:20px 20px 22px;display:flex;flex-direction:column;gap:14px;
   background:linear-gradient(165deg,rgba(255,255,255,.085),rgba(255,255,255,.02) 55%,rgba(255,255,255,.035));
   border:1px solid var(--edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 40px 90px -40px color-mix(in srgb,var(--c) 85%,transparent),0 0 60px -30px rgba(227,196,143,.35);
-  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);touch-action:pan-y;user-select:none;-webkit-user-select:none;will-change:transform}
+  touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .pass::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;
   background:linear-gradient(140deg,rgba(227,196,143,.7),rgba(255,255,255,0) 30%,rgba(255,255,255,0) 70%,rgba(134,166,214,.6));
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
@@ -144,9 +144,9 @@ button:focus-visible,input:focus-visible{outline:1.5px solid var(--gold);outline
 .qr{width:min(228px,60vw);aspect-ratio:1;max-width:100%;display:grid;place-items:center}
 .qr canvas{width:100%;height:100%;image-rendering:pixelated;display:block}
 .tile.reveal .qr{animation:qrIn .7s cubic-bezier(.2,.8,.2,1)}
-.tile.reveal::after{content:"";position:absolute;left:0;right:0;height:46px;top:-50px;background:linear-gradient(180deg,transparent,rgba(227,196,143,.55),transparent);animation:sweep .85s .1s ease-out forwards;pointer-events:none}
-@keyframes qrIn{from{clip-path:inset(0 0 100% 0);opacity:.2}to{clip-path:inset(0 0 0 0);opacity:1}}
-@keyframes sweep{to{top:110%}}
+.tile.reveal::after{content:"";position:absolute;left:0;right:0;top:0;height:46px;background:linear-gradient(180deg,transparent,rgba(227,196,143,.55),transparent);transform:translateY(-50px);will-change:transform;animation:sweep .85s .1s ease-out forwards;pointer-events:none}
+@keyframes qrIn{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
+@keyframes sweep{to{transform:translateY(calc(var(--qrh,300px) + 10px))}}
 .p-vpa{text-align:center;font-family:var(--f-mono);font-size:12.5px;color:var(--ink);opacity:.85;overflow-wrap:anywhere}
 .p-apps{text-align:center;font-size:12px;color:var(--muted);margin-top:-8px}
 .dots{display:flex;justify-content:center;gap:6px}
@@ -165,7 +165,7 @@ button:focus-visible,input:focus-visible{outline:1.5px solid var(--gold);outline
 .present .p-vpa{margin-top:2px}
 
 /* sheets */
-.sheet-bg{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center;z-index:40;animation:fade .18s ease-out;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.sheet-bg{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center;z-index:40;animation:fade .18s ease-out}
 .sheet{width:100%;max-width:460px;border-radius:28px 28px 0 0;padding:10px max(20px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:16px;max-height:92vh;overflow:auto;
   background:linear-gradient(180deg,#14151B,#0B0C10);border-top:1px solid var(--edge-hi);animation:rise .24s cubic-bezier(.2,.8,.2,1)}
 .grab{width:40px;height:4px;border-radius:4px;background:var(--faint);align-self:center}
@@ -182,29 +182,18 @@ button:focus-visible,input:focus-visible{outline:1.5px solid var(--gold);outline
 .solid{height:50px;border-radius:999px;background:var(--ink);color:#0B0C10;font-weight:500}
 .danger{color:var(--warn)}
 .preview img{width:100%;border-radius:18px;display:block}
-.toast{position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);background:rgba(30,31,38,.92);border:1px solid var(--edge-hi);color:var(--ink);padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s, transform .2s;pointer-events:none;z-index:50;white-space:nowrap;backdrop-filter:blur(10px)}
+.toast{position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);background:#1C1D24;border:1px solid var(--edge-hi);color:var(--ink);padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s, transform .2s;pointer-events:none;z-index:50;white-space:nowrap}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 @keyframes rise{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
-/* ===== Liquid kit: refraction glass, specular rim, touch light, springs, morphs ===== */
-/* drifting light behind the glass so refraction has something to bend */
-.lk-lights{position:fixed;inset:0;pointer-events:none;overflow:hidden}
-.lk-lights i{position:absolute;border-radius:50%;opacity:.55;will-change:transform}
-.lk-lights i:nth-child(1){width:62vmin;height:62vmin;left:-14vmin;top:8vh;background:radial-gradient(circle,color-mix(in srgb,var(--c) 85%,#fff 5%),transparent 68%);animation:lkDrift1 23s ease-in-out infinite alternate}
-.lk-lights i:nth-child(2){width:54vmin;height:54vmin;right:-16vmin;top:34vh;background:radial-gradient(circle,rgba(227,196,143,.75),transparent 68%);animation:lkDrift2 29s ease-in-out infinite alternate}
-.lk-lights i:nth-child(3){width:46vmin;height:46vmin;left:24vw;bottom:-12vh;background:radial-gradient(circle,rgba(120,160,235,.6),transparent 70%);animation:lkDrift3 31s ease-in-out infinite alternate}
-@keyframes lkDrift1{to{transform:translate(22vw,26vh) scale(1.15)}}
-@keyframes lkDrift2{to{transform:translate(-26vw,-18vh) scale(.9)}}
-@keyframes lkDrift3{to{transform:translate(-18vw,-30vh) scale(1.2)}}
-
-/* real refraction where the engine supports SVG backdrop filters (Android WebView / Chrome) */
-.lk-refract .pass{background:linear-gradient(165deg,rgba(255,255,255,.06),rgba(255,255,255,.012) 55%,rgba(255,255,255,.03))}
-.lk-refract .key{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01))}
-
-/* springs own the transform now */
+/* ===== Liquid kit: glass lighting, specular rim, touch light, springs, morphs ===== */
+/* springs own the transform now; animated pieces get their own GPU layer so presses don't repaint */
+.key,.chip,.cta,.ghostbtn,.round,.vcard,.ring,#amtv,.pass{will-change:transform}
+.pass{will-change:transform,opacity}
 .key,.vcard,.chip,.cta,.ghostbtn,.round{transition-property:background,box-shadow,border-color,opacity,filter!important}
 .key:active,.key.hit,.vcard:active,.chip:active,.cta:active{transform:none}
+.key.hit{background:rgba(255,255,255,.12)}
 
 /* specular rim + touch light overlay (injected span) */
 .lk-glint{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;overflow:hidden}
@@ -212,30 +201,30 @@ button:focus-visible,input:focus-visible{outline:1.5px solid var(--gold);outline
   background:conic-gradient(from var(--lk-a,200deg) at 50% 50%,rgba(255,240,210,.9),rgba(255,255,255,.05) 18%,rgba(255,255,255,0) 40%,rgba(160,190,255,.55) 52%,rgba(255,255,255,0) 66%,rgba(255,255,255,.05) 85%,rgba(255,240,210,.9));
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:var(--lk-rim,.55);transition:opacity .35s}
 .lk-glint::after{content:"";position:absolute;width:240px;height:240px;left:calc(var(--lk-x,50%) - 120px);top:calc(var(--lk-y,50%) - 120px);border-radius:50%;
-  background:radial-gradient(circle,rgba(255,232,190,.30),rgba(255,232,190,.08) 40%,transparent 68%);opacity:var(--lk-on,0);transition:opacity .45s ease-out;mix-blend-mode:screen}
+  background:radial-gradient(circle,rgba(255,232,190,.30),rgba(255,232,190,.08) 40%,transparent 68%);opacity:var(--lk-on,0);transition:opacity .45s ease-out}
 .key .lk-glint::after{width:150px;height:150px;left:calc(var(--lk-x,50%) - 75px);top:calc(var(--lk-y,50%) - 75px)}
 .lk-pressed>.lk-glint{--lk-on:1;--lk-rim:1}
 .lk-pressed>.lk-glint::after{transition:opacity .08s}
 
 /* ripple of light on tap */
-.lk-ripple{position:absolute;border-radius:50%;pointer-events:none;z-index:1;width:10px;height:10px;margin:-5px 0 0 -5px;
-  background:radial-gradient(circle,rgba(255,236,200,.35),rgba(255,236,200,0) 70%);animation:lkRipple .6s cubic-bezier(.2,.8,.2,1) forwards}
-@keyframes lkRipple{to{transform:scale(28);opacity:0}}
+.lk-ripple{position:absolute;border-radius:50%;pointer-events:none;z-index:1;width:220px;height:220px;margin:-110px 0 0 -110px;
+  background:radial-gradient(circle,rgba(255,236,200,.32),rgba(255,236,200,0) 70%);transform:scale(.05);will-change:transform,opacity;animation:lkRipple .55s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes lkRipple{to{transform:scale(1);opacity:0}}
 
 /* morph between screens (View Transitions) */
 ::view-transition-group(lk-hero){animation-duration:var(--lk-morph-d,.6s);animation-timing-function:var(--lk-spring,cubic-bezier(.2,.9,.25,1.05))}
 ::view-transition-old(lk-hero),::view-transition-new(lk-hero){height:100%;width:100%;object-fit:fill;animation-duration:.35s}
 ::view-transition-old(root){animation:lkOut .3s ease-in both}
 ::view-transition-new(root){animation:lkIn .45s cubic-bezier(.2,.8,.2,1) both}
-@keyframes lkOut{to{opacity:0;transform:scale(.97);filter:blur(6px)}}
-@keyframes lkIn{from{opacity:0;transform:scale(1.02);filter:blur(6px)}}
-@media (prefers-reduced-motion: reduce){.lk-lights i,.lk-ripple{animation:none!important}::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
+@keyframes lkOut{to{opacity:0;transform:scale(.97)}}
+@keyframes lkIn{from{opacity:0;transform:scale(1.02)}}
+@media (prefers-reduced-motion: reduce){.lk-ripple{animation:none!important}::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
 </style>
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
 </head>
 <body>
 
-<canvas id="stars" aria-hidden="true"></canvas>
+<canvas id="bg" aria-hidden="true"></canvas><div class="grain" id="grain" aria-hidden="true"></div>
 
 <main class="view" id="vReq">
   <header class="hd">
@@ -314,16 +303,40 @@ const active=()=>state.accounts.find(a=>a.id===state.active)||state.accounts[0];
 const isSample=a=>a&&(a.example||/^example/i.test(a.vpa));
 let amtStr="",note="",current=null;
 
-/* ---------- starfield ---------- */
-function stars(){
-  const c=$("stars"),d=Math.min(2,window.devicePixelRatio||1),w=innerWidth,h=innerHeight;
-  c.width=w*d;c.height=h*d;const x=c.getContext("2d");x.scale(d,d);
-  let g=x.createRadialGradient(w*.85,-40,0,w*.85,-40,w*.9);g.addColorStop(0,"rgba(227,196,143,.13)");g.addColorStop(1,"rgba(227,196,143,0)");x.fillStyle=g;x.fillRect(0,0,w,h);
-  g=x.createRadialGradient(0,h*.75,0,0,h*.75,w*.9);g.addColorStop(0,"rgba(96,130,200,.12)");g.addColorStop(1,"rgba(96,130,200,0)");x.fillStyle=g;x.fillRect(0,0,w,h);
-  let s=7;const r=()=>(s=(s*16807)%2147483647)/2147483647;
-  for(let i=0;i<Math.round(w*h/2600);i++){const a=r()*.55+.08,z=r()<.08?1.3:.6+r()*.4;x.fillStyle=r()<.2?`rgba(227,206,170,${a})`:`rgba(220,228,255,${a})`;x.beginPath();x.arc(r()*w,r()*h,z,0,7);x.fill()}
-}
-stars();addEventListener("resize",()=>{clearTimeout(stars.t);stars.t=setTimeout(stars,150)});
+/* ---------- background: slow abstract light, drawn tiny and stretched (soft and almost free) ---------- */
+const BG=(()=>{
+  const c=$("bg"),x=c.getContext("2d",{alpha:false}),reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let W=64,H=140,t=60+Math.random()*120,last=0,lastInput=performance.now(),timer=0,acc=[44,74,122];
+  function size(){W=64;H=Math.max(64,Math.round(64*innerHeight/Math.max(1,innerWidth)));c.width=W;c.height=H;draw()}
+  const rgba=(c,a)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`;
+  const GOLD=[227,196,143],STEEL=[110,140,205];
+  function blob(cx,cy,r,col,a){const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,rgba(col,a));g.addColorStop(.5,rgba(col,a*.38));g.addColorStop(1,rgba(col,0));x.fillStyle=g;x.fillRect(0,0,W,H)}
+  function draw(){
+    x.globalCompositeOperation="source-over";x.fillStyle="#040507";x.fillRect(0,0,W,H);
+    x.globalCompositeOperation="lighter";
+    blob(W*(.82+.12*Math.sin(t*.051)),H*(.06+.05*Math.cos(t*.043)),W*(.95+.08*Math.sin(t*.07)),GOLD,.13);
+    blob(W*(.12+.16*Math.sin(t*.037+2)),H*(.74+.08*Math.cos(t*.029+1)),W*(1.05+.1*Math.cos(t*.06)),STEEL,.11);
+    blob(W*(.5+.3*Math.sin(t*.023+4)),H*(.42+.16*Math.sin(t*.031+3)),W*(.7+.08*Math.sin(t*.05+2)),acc,.16);
+    if(x.createConicGradient){const g=x.createConicGradient(t*.03,W*1.05,-H*.05);
+      g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(.09,rgba(GOLD,.05));g.addColorStop(.17,"rgba(0,0,0,0)");g.addColorStop(.31,rgba(STEEL,.035));
+      g.addColorStop(.43,"rgba(0,0,0,0)");g.addColorStop(.62,rgba(GOLD,.03));g.addColorStop(.72,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,0)");x.fillStyle=g;x.fillRect(0,0,W,H)}
+  }
+  // ~30 fps while you use the app, 12 fps when idle, stopped in the background
+  function tick(){timer=0;if(document.hidden||reduce)return;const now=performance.now();
+    t+=Math.min(.25,(now-(last||now))/1000);last=now;requestAnimationFrame(draw);
+    timer=setTimeout(tick,now-lastInput<15000?33:83)}
+  function wake(){lastInput=performance.now();if(!timer&&!document.hidden&&!reduce){last=performance.now();timer=setTimeout(tick,33)}}
+  addEventListener("pointerdown",wake,{passive:true,capture:true});
+  document.addEventListener("visibilitychange",()=>{if(document.hidden){clearTimeout(timer);timer=0}else wake()});
+  let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(size,150)});
+  // film grain over the stretched gradients: hides banding on AMOLED screens
+  (()=>{const n=128,g=document.createElement("canvas");g.width=g.height=n;const gx=g.getContext("2d"),im=gx.createImageData(n,n);
+    let sd=9;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;
+    for(let i=0;i<n*n;i++){const v=r()*255|0;im.data[i*4]=im.data[i*4+1]=im.data[i*4+2]=v;im.data[i*4+3]=10+(r()*12|0)}
+    gx.putImageData(im,0,0);$("grain").style.backgroundImage=`url(${g.toDataURL()})`})();
+  size();wake();
+  return{setAccent(hex){const h=String(hex||"").replace("#","");const v=parseInt(h,16);if(isNaN(v))return;acc=[v>>16&255,v>>8&255,v&255].map(c=>Math.round(c*.7+70));draw()}};
+})();
 (function(){const h=new Date().getHours();$("greet").textContent=h<5?"Good night":h<12?"Good morning":h<17?"Good afternoon":"Good evening"})();
 
 /* ---------- money ---------- */
@@ -335,7 +348,18 @@ function upiLink(a,n,nt){
   p.set("am",n.toFixed(2));p.set("cu","INR");if(nt)p.set("tn",nt);
   return "upi://pay?"+p.toString().replace(/\+/g,"%20");
 }
+const qrCache=new Map();
 function makeQR(text,px){
+  const key=px+"|"+text,hit=qrCache.get(key);
+  if(hit){const c=document.createElement("canvas");c.width=c.height=px;c.getContext("2d").drawImage(hit,0,0);return c}
+  const made=makeQRNow(text,px);if(qrCache.size>12)qrCache.clear();qrCache.set(key,made);
+  const c=document.createElement("canvas");c.width=c.height=px;c.getContext("2d").drawImage(made,0,0);return c;
+}
+// build the QR while you are still typing, so opening the QR screen never stutters
+let qrPrep=0;
+function prepQR(){clearTimeout(qrPrep);qrPrep=setTimeout(()=>{const a=active(),n=parseAmt(amtStr);if(!a||!n)return;
+  const run=()=>{try{makeQR(upiLink(a,n,note),480)}catch(e){}};window.requestIdleCallback?requestIdleCallback(run,{timeout:600}):run()},220)}
+function makeQRNow(text,px){
   if(typeof QRCode==="undefined")throw new Error("lib");
   const holder=document.createElement("div");
   new QRCode(holder,{text,width:px,height:px,colorDark:"#000000",colorLight:"#FFFFFF",correctLevel:QRCode.CorrectLevel.M});
@@ -350,7 +374,7 @@ function renderCards(){
     <span><b>${esc(a.label)}</b><small>${esc(a.vpa)}</small></span></button>`).join("")+
     `<button type="button" class="vcard add" id="addAcct"><span>+</span>Add QR</button>`;
   const a=active(),w=$("warn");
-  if(a)document.documentElement.style.setProperty("--c",a.color);
+  if(a){document.documentElement.style.setProperty("--c",a.color);BG.setAccent(a.color)}
   w.hidden=!isSample(a);
   if(isSample(a))w.innerHTML=`<span>●</span><span><b>Sample UPI ID.</b> Tap the pencil and enter your real UPI ID before collecting.</span>`;
   const el=$("cards").querySelector('[aria-pressed="true"]');
@@ -365,6 +389,7 @@ function renderAmt(){
   const b=$("reqBtn");b.disabled=!n||!active();
   b.innerHTML=n?`Request ${fmt(n)} <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3.5 9h11M10 4.5 14.5 9 10 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`:(amtStr&&!n?"Up to ₹1,00,000":"Enter amount");
   const nb=$("noteBtn");nb.textContent=note?note:"+ Add note";nb.classList.toggle("has",!!note);
+  prepQR();
 }
 function press(k){
   if(k==="del"){amtStr=amtStr.slice(0,-1)}
@@ -386,7 +411,9 @@ $("chips").addEventListener("click",e=>{const b=e.target.closest("button");if(!b
 let holdT=null;
 $("pad").addEventListener("pointerdown",e=>{const b=e.target.closest(".key");if(!b)return;
   if(b.dataset.k==="del"){holdT=setTimeout(()=>{holdT="fired";press("clear");b.classList.add("hit");setTimeout(()=>b.classList.remove("hit"),150)},520)}});
-$("pad").addEventListener("pointerup",()=>{if(holdT&&holdT!=="fired")clearTimeout(holdT)});
+const stopHold=()=>{if(holdT&&holdT!=="fired"){clearTimeout(holdT);holdT=null}};
+addEventListener("pointerup",stopHold,true);addEventListener("pointercancel",stopHold,true);
+$("pad").addEventListener("pointerout",e=>{const k=e.target.closest&&e.target.closest('.key[data-k="del"]');if(k&&!k.contains(e.relatedTarget))stopHold()});
 $("pad").addEventListener("click",e=>{const b=e.target.closest(".key");if(!b)return;
   if(b.dataset.k==="del"&&holdT==="fired"){holdT=null;return}holdT=null;
   press(b.dataset.k);try{navigator.vibrate&&navigator.vibrate(8)}catch(_){}});
@@ -590,7 +617,7 @@ renderCards();renderAmt();
 </script>
 <script>
 /* ===== Liquid kit for Orbe Pay =====
-   1. Refraction glass: SVG displacement map built from each panel's rounded-rect shape, used as a backdrop filter
+   1. Glass look from lighting only (no live backdrop filters: they re-render every frame and caused lag)
    2. Spring physics: velocity-aware, interruptible springs for presses, swipes and pops
    3. Touch light + specular rim that follows the finger (and phone tilt in the app)
    4. Morph transitions between the keypad and the QR screen (View Transitions + spring easing) */
@@ -605,16 +632,17 @@ class Spring{
   set(x){this.x=x;this.t=x;this.v=0;this.emit()}
   on(f){this.subs.push(f);return this}
   emit(){for(const f of this.subs)f(this.x,this)}
-  run(){if(this.raf)return;let last=performance.now();
-    const tick=now=>{let dt=Math.min(.032,(now-last)/1000);last=now;
-      // fixed sub-steps keep stiff springs stable
-      const n=Math.ceil(dt/.004);dt/=n;
-      for(let i=0;i<n;i++){const a=(-this.k*(this.x-this.t)-this.c*this.v)/this.m;this.v+=a*dt;this.x+=this.v*dt}
-      this.emit();
-      if(Math.abs(this.v)<this.eps*4&&Math.abs(this.x-this.t)<this.eps){this.x=this.t;this.v=0;this.emit();this.raf=0;this.done&&this.done();return}
-      this.raf=requestAnimationFrame(tick)};
-    this.raf=requestAnimationFrame(tick)}
+  run(){if(this.raf)return;this.raf=1;Spring.live.add(this);Spring.kick()}
+  step(dt){const n=Math.ceil(dt/.004),h=dt/n;   // fixed sub-steps keep stiff springs stable
+    for(let i=0;i<n;i++){const a=(-this.k*(this.x-this.t)-this.c*this.v)/this.m;this.v+=a*h;this.x+=this.v*h}
+    if(Math.abs(this.v)<this.eps*4&&Math.abs(this.x-this.t)<this.eps){this.x=this.t;this.v=0;this.emit();this.raf=0;Spring.live.delete(this);this.done&&this.done();return}
+    this.emit()}
+  // all springs share one requestAnimationFrame loop, which stops when nothing is moving
+  static kick(){if(Spring.loop)return;let last=performance.now();
+    const f=now=>{const dt=Math.min(.032,Math.max(0,(now-last)/1000));last=now;for(const s of [...Spring.live])s.step(dt);Spring.loop=Spring.live.size?requestAnimationFrame(f):0};
+    Spring.loop=requestAnimationFrame(f)}
 }
+Spring.live=new Set();Spring.loop=0;
 window.LKSpring=Spring;
 // CSS linear() easing sampled from a spring, so CSS animations can bounce like the JS ones
 function springEasing(k=260,c=22,steps=48){
@@ -633,7 +661,7 @@ document.addEventListener("pointerdown",e=>{
   const el=e.target.closest(PRESS_SEL);if(!el||el.disabled||reduce)return;
   const big=el.classList.contains("cta")||el.classList.contains("vcard");
   springFor(el).to(big?.965:.92,{k:900,c:34});
-  el.classList.add("lk-pressed");lightAt(el,e);ripple(el,e);
+  glint(el);el.classList.add("lk-pressed");lightAt(el,e);ripple(el,e);
   const up=()=>{springFor(el).to(1,{k:560,c:15});el.classList.remove("lk-pressed");removeEventListener("pointerup",up);removeEventListener("pointercancel",up)};
   addEventListener("pointerup",up);addEventListener("pointercancel",up);
 },{passive:true});
@@ -659,52 +687,9 @@ function ripple(el,e){if(reduce)return;const r=el.getBoundingClientRect(),d=docu
   el.appendChild(d);setTimeout(()=>d.remove(),650)}
 document.addEventListener("pointermove",e=>{const el=e.target.closest(GLASS_SEL);if(el&&el.classList.contains("lk-pressed"))lightAt(el,e)},{passive:true});
 // rim light follows phone tilt (works in the Android app; browsers may block it)
-let tiltA=200;
-addEventListener("deviceorientation",e=>{if(e.gamma==null)return;const a=200+e.gamma*2.2+(e.beta-45)*.6;if(Math.abs(a-tiltA)<1.5)return;tiltA=a;root.style.setProperty("--lk-a",a.toFixed(1)+"deg")},{passive:true});
-
-/* ---------- 1. refraction glass ---------- */
-const canRefract=(()=>{try{return !!window.chrome&&CSS.supports("backdrop-filter","url(#x)")&&!/Firefox/.test(navigator.userAgent)}catch(e){return false}})();
-let svgHost=null;
-const NS="http://www.w3.org/2000/svg";
-function host(){if(!svgHost){svgHost=document.createElementNS(NS,"svg");svgHost.setAttribute("width","0");svgHost.setAttribute("height","0");svgHost.setAttribute("aria-hidden","true");svgHost.style.position="absolute";document.body.appendChild(svgHost)}return svgHost}
-/* displacement map: inside a "bezel" band near the rounded edge, push the backdrop sample inward,
-   strongest at the very edge (like a convex glass lens), zero in the flat middle */
-function dispMap(w,h,rad,bezel){
-  const s=.5,W=Math.max(2,Math.round(w*s)),H=Math.max(2,Math.round(h*s)),R=rad*s,B=bezel*s;
-  const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");const img=x.createImageData(W,H),d=img.data;
-  for(let j=0;j<H;j++)for(let i=0;i<W;i++){
-    const px=i+.5,py=j+.5;
-    // signed distance to rounded rect (positive inside) and its outward normal
-    const qx=Math.max(R-px,0,px-(W-R)),qy=Math.max(R-py,0,py-(H-R));
-    let dist,nx,ny;
-    if(qx>0&&qy>0){const l=Math.hypot(qx,qy);dist=R-l;nx=(px<R?-1:1)*qx/l;ny=(py<R?-1:1)*qy/l}
-    else{const dl=px,dr=W-px,dt=py,db=H-py,m=Math.min(dl,dr,dt,db);dist=m;nx=m===dl?-1:m===dr?1:0;ny=m===dt?-1:m===db?1:0;if(nx&&ny)ny=0}
-    let mag=0;if(dist<B&&dist>0){const t=1-dist/B;mag=t*t*(3-2*t)} // smooth curvature
-    const o=(j*W+i)*4;d[o]=128-nx*mag*127;d[o+1]=128-ny*mag*127;d[o+2]=128;d[o+3]=255}
-  x.putImageData(img,0,0);return c.toDataURL();
-}
-const filters=new Map();
-function refractFilter(w,h,rad,{bezel=22,scale=34,blur=5,sat=1.35}={}){
-  const key=[Math.round(w),Math.round(h),rad,bezel,scale,blur].join("x");if(filters.has(key))return filters.get(key);
-  const id="lkf"+filters.size;const f=document.createElementNS(NS,"filter");
-  f.setAttribute("id",id);f.setAttribute("x","0");f.setAttribute("y","0");f.setAttribute("width",w);f.setAttribute("height",h);
-  f.setAttribute("filterUnits","userSpaceOnUse");f.setAttribute("primitiveUnits","userSpaceOnUse");f.setAttribute("color-interpolation-filters","sRGB");
-  f.innerHTML=`<feGaussianBlur in="SourceGraphic" stdDeviation="${blur}" result="b"/>
-    <feImage href="${dispMap(w,h,rad,bezel)}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" result="m"/>
-    <feDisplacementMap in="b" in2="m" scale="${scale}" xChannelSelector="R" yChannelSelector="G" result="d"/>
-    <feColorMatrix in="d" type="saturate" values="${sat}"/>`;
-  host().appendChild(f);filters.set(key,id);return id;
-}
-function refract(el,opts){if(!canRefract||!el)return;const r=el.getBoundingClientRect();if(r.width<4||r.height<4)return;
-  const rad=parseFloat(getComputedStyle(el).borderTopLeftRadius)||0;
-  const id=refractFilter(r.width,r.height,Math.min(rad,r.width/2,r.height/2),opts);
-  el.style.backdropFilter=el.style.webkitBackdropFilter=`url(#${id})`}
-function refractAll(){
-  document.querySelectorAll(".pass").forEach(el=>refract(el,{bezel:26,scale:46,blur:7,sat:1.45}));
-  const k=document.querySelector(".key");if(k){document.querySelectorAll(".key").forEach(el=>refract(el,{bezel:12,scale:20,blur:3,sat:1.3}))}
-  document.querySelectorAll(".ghostbtn,.round").forEach(el=>refract(el,{bezel:10,scale:14,blur:4}));
-}
-if(canRefract)root.classList.add("lk-refract");
+let tiltA=200,tiltT=0;
+addEventListener("deviceorientation",e=>{if(e.gamma==null)return;const now=performance.now();if(now-tiltT<120)return;
+  const a=200+e.gamma*2.2+(e.beta-45)*.6;if(Math.abs(a-tiltA)<4)return;tiltA=a;tiltT=now;root.style.setProperty("--lk-a",a.toFixed(0)+"deg")},{passive:true});
 
 /* ---------- swipe with velocity, stretch and spring ---------- */
 let enterV=0;
@@ -713,7 +698,8 @@ window.attachSwipe=function(el){
   const xs=new Spring(0,{k:380,c:30,eps:.4}),sq=new Spring(0,{k:500,c:24,eps:.002});
   const paint=()=>{const x=xs.x,s=sq.x;el.style.transform=`translateX(${x.toFixed(2)}px) rotate(${(x*.025).toFixed(3)}deg) scale(${(1+s*.035).toFixed(4)},${(1-s*.03).toFixed(4)})`;
     el.style.opacity=String(1-Math.min(.6,Math.abs(x)/700))};
-  xs.on(paint);sq.on(paint);
+  let out=null,fire=null;
+  xs.on(x=>{paint();if(out!==null&&Math.abs(x-out)<el.offsetWidth*.08)fire()});sq.on(paint);
   let id=null,x0=0,y0=0,horiz=null,hist=[];
   el.addEventListener("pointerdown",e=>{if(e.button)return;id=e.pointerId;x0=e.clientX-xs.x;y0=e.clientY;horiz=null;hist=[{t:e.timeStamp,x:e.clientX}];el.classList.remove("settle","inR","inL")});
   el.addEventListener("pointermove",e=>{if(e.pointerId!==id)return;const mx=e.clientX-x0,my=e.clientY-y0;
@@ -727,8 +713,8 @@ window.attachSwipe=function(el){
     sq.to(0,{v:0});
     const w=el.offsetWidth,go=multi&&(Math.abs(xs.x)>w*.28||Math.abs(v)>700);
     if(go){const dir=(Math.abs(v)>700?-Math.sign(v):-Math.sign(xs.x))||1;
-      const out=-dir*w*1.25;let fired=false;const fire=()=>{if(fired)return;fired=true;xs.done=null;enterV=v;step(dir)};
-      xs.done=fire;xs.on(x=>{if(!fired&&Math.abs(x-out)<w*.08)fire()});xs.to(out,{v,k:300,c:30})}
+      out=-dir*w*1.25;let fired=false;fire=()=>{if(fired)return;fired=true;out=null;xs.done=null;enterV=v;step(dir)};
+      xs.done=fire;xs.to(out,{v,k:300,c:30})}
     else xs.to(0,{v,k:420,c:24})};
   el.addEventListener("pointerup",end);el.addEventListener("pointercancel",end);
   el._lk={xs,sq};
@@ -739,11 +725,11 @@ window.renderPass=function(dir,reveal){
   const el=document.querySelector(".pass");if(!el)return;
   glintAll(document.getElementById("vQR"));
   if(dir&&el._lk&&!reduce){el.classList.remove("inR","inL");const w=el.offsetWidth;el._lk.xs.set(dir*w*.9);el._lk.xs.to(0,{v:enterV*.6,k:300,c:24});enterV=0}
-  requestAnimationFrame(()=>refract(el,{bezel:26,scale:46,blur:7,sat:1.45}));
 };
 
 /* ---------- 4. morph keypad <-> QR ---------- */
-const vt=!!document.startViewTransition&&!reduce;
+// the browser's view-transition morph snapshots the whole screen twice and stutters on phones; plain GPU slides are smoother
+const vt=false;
 const _show=window.show;
 window.show=function(id,cls){
   if(!vt){_show(id,cls);afterView();return}
@@ -767,16 +753,13 @@ window.openQR=function(){if(!vt)return _openQR();if(!parseAmt(amtStr)||!active()
     ["vReq","vQR"].forEach(v=>{const el=document.getElementById(v);el.hidden=v!=="vQR";el.classList.remove("enter","back")});scrollTo(0,0);
     _renderPass2(0,true);const p=document.querySelector(".pass");if(p)p.style.viewTransitionName="lk-hero"});
   t.finished.finally(()=>{document.querySelectorAll(".pass,#reqBtn").forEach(e=>e.style.viewTransitionName="");afterView()})};
-function afterView(){glintAll();requestAnimationFrame(refractAll)}
+function afterView(){glintAll()}
 document.getElementById("reqBtn").onclick=()=>window.openQR();
 
 /* ---------- boot ---------- */
-const lights=document.createElement("div");lights.className="lk-lights";lights.setAttribute("aria-hidden","true");lights.innerHTML="<i></i><i></i><i></i>";
-document.getElementById("stars").after(lights);
-glintAll();requestAnimationFrame(refractAll);
-let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(refractAll,200)});
+glintAll();
 // re-apply after the app re-renders cards or sheets
-new MutationObserver(m=>{let need=false;for(const r of m)for(const n of r.addedNodes)if(n.nodeType===1&&(n.matches?.(GLASS_SEL)||n.querySelector?.(GLASS_SEL)))need=true;if(need){glintAll();requestAnimationFrame(refractAll)}})
+new MutationObserver(m=>{let need=false;for(const r of m)for(const n of r.addedNodes)if(n.nodeType===1&&(n.matches?.(GLASS_SEL)||n.querySelector?.(GLASS_SEL)))need=true;if(need)glintAll()})
   .observe(document.body,{childList:true,subtree:true});
 })();
 

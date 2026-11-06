@@ -62,6 +62,7 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setAllowContentAccess(false);
         s.setTextZoom(100);
+        s.setOffscreenPreRaster(true);      // keep the page rasterised: smoother animation, no blank flashes
 
         web.addJavascriptInterface(new Bridge(), "Android");
         web.setWebViewClient(new WebViewClient() {

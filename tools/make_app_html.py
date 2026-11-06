@@ -5,6 +5,7 @@ import re
 src = open('index.html', encoding='utf-8').read()
 src = src.replace('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js', 'qrcode.min.js')
 src = re.sub(r'<link rel="preconnect"[^>]*>\n', '', src)
+src = re.sub(r'<link rel="(icon|apple-touch-icon)"[^>]*>\n', '', src)   # website-only icons, not in the app
 src = re.sub(r'<link rel="stylesheet" href="https://fonts.googleapis.com[^>]*>\n', '', src)
 faces = [('Outfit', w, f'fonts/outfit-latin-{w}-normal.woff2') for w in (200, 300, 400, 500, 600)] + \
         [('JetBrains Mono', w, f'fonts/jetbrains-mono-latin-{w}-normal.woff2') for w in (400, 500)]
