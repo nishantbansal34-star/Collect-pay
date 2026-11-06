@@ -3,7 +3,6 @@ bundled QR library, bundled fonts, nothing loaded from the internet.
 Run from the repo root:  python3 tools/make_app_html.py"""
 import re
 src = open('index.html', encoding='utf-8').read()
-src = src.replace('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js', 'qrcode.min.js')
 src = re.sub(r'<link rel="preconnect"[^>]*>\n', '', src)
 src = re.sub(r'<link rel="(icon|apple-touch-icon)"[^>]*>\n', '', src)   # website-only icons, not in the app
 src = re.sub(r'<link rel="stylesheet" href="https://fonts.googleapis.com[^>]*>\n', '', src)

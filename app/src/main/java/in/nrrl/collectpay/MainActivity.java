@@ -1,6 +1,9 @@
 package in.nrrl.collectpay;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.os.PowerManager;
+import android.view.HapticFeedbackConstants;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
@@ -165,28 +168,47 @@ public class MainActivity extends Activity {
             });
         }
 
+        // JS calls arrive on a background thread: decode and write the image here, so the UI never waits on it
         @JavascriptInterface
-        public void shareImage(final String base64Png, final String text) {
-            runOnUiThread(() -> {
-                try {
-                    File dir = new File(getCacheDir(), "shared");
-                    dir.mkdirs();
-                    File f = new File(dir, "payment-qr.png");
-                    try (FileOutputStream out = new FileOutputStream(f)) {
-                        out.write(Base64.decode(base64Png, Base64.DEFAULT));
+        public void shareImage(final String base64, final String text) {
+            try {
+                byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
+                final boolean jpeg = bytes.length > 2 && (bytes[0] & 0xff) == 0xFF && (bytes[1] & 0xff) == 0xD8;
+                File dir = new File(getCacheDir(), "shared");
+                dir.mkdirs();
+                final File f = new File(dir, jpeg ? "payment-qr.jpg" : "payment-qr.png");
+                try (FileOutputStream out = new FileOutputStream(f)) { out.write(bytes); }
+                runOnUiThread(() -> {
+                    try {
+                        Uri uri = FileProvider.getUriForFile(MainActivity.this, getPackageName() + ".files", f);
+                        Intent i = new Intent(Intent.ACTION_SEND);
+                        i.setType(jpeg ? "image/jpeg" : "image/png");
+                        i.putExtra(Intent.EXTRA_STREAM, uri);
+                        i.putExtra(Intent.EXTRA_TEXT, text);
+                        i.setClipData(ClipData.newRawUri("payment-qr", uri));
+                        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        startActivity(Intent.createChooser(i, "Share payment QR"));
+                    } catch (Exception e) {
+                        Toast.makeText(MainActivity.this, "Couldn't share the QR image", Toast.LENGTH_SHORT).show();
                     }
-                    Uri uri = FileProvider.getUriForFile(MainActivity.this, getPackageName() + ".files", f);
-                    Intent i = new Intent(Intent.ACTION_SEND);
-                    i.setType("image/png");
-                    i.putExtra(Intent.EXTRA_STREAM, uri);
-                    i.putExtra(Intent.EXTRA_TEXT, text);
-                    i.setClipData(ClipData.newRawUri("payment-qr", uri));
-                    i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    startActivity(Intent.createChooser(i, "Share payment QR"));
-                } catch (Exception e) {
-                    Toast.makeText(MainActivity.this, "Couldn't share the QR image", Toast.LENGTH_SHORT).show();
-                }
-            });
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Couldn't share the QR image", Toast.LENGTH_SHORT).show());
+            }
+        }
+
+        // keypad tick through the system haptics (follows the phone's touch-feedback setting, needs no permission)
+        @JavascriptInterface
+        public void haptic() {
+            web.post(() -> web.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP));
+        }
+
+        // true on Battery Saver or a low-RAM phone: the page then drops decorative motion
+        @JavascriptInterface
+        public boolean lite() {
+            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+            ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            return (pm != null && pm.isPowerSaveMode()) || (am != null && am.isLowRamDevice());
         }
 
         @JavascriptInterface

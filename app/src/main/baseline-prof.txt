@@ -1,0 +1,4 @@
+# Startup profile: Android compiles these ahead of time, so Orbe Pay opens from cold
+# without waiting on the just-in-time compiler.
+HSPLin/nrrl/collectpay/**;->**(**)**
+Lin/nrrl/collectpay/**;
